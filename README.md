@@ -1,4 +1,4 @@
-# Mailboxer-mongoid [![](https://secure.travis-ci.org/ging/mailboxer.png)](http://travis-ci.org/ging/mailboxer) [![Gem Version](https://badge.fury.io/rb/mailboxer.png)](http://badge.fury.io/rb/mailboxer) [![](https://gemnasium.com/ging/mailboxer.png)](https://gemnasium.com/ging/mailboxer)
+# Mailboxer-mongoid
 
 Mailboxer-mongoid is a rebuild of Mailbox (https://github.com/ging/mailboxer) which attempts to support the Mongoid ORM. This project began 1/27/2014 and is in its infancy. This gem should be considered highly unstable and unoptimized. Use at your own risk.
 
