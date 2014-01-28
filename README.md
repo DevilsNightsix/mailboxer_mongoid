@@ -1,4 +1,8 @@
-# Mailboxer [![](https://secure.travis-ci.org/ging/mailboxer.png)](http://travis-ci.org/ging/mailboxer) [![Gem Version](https://badge.fury.io/rb/mailboxer.png)](http://badge.fury.io/rb/mailboxer) [![](https://gemnasium.com/ging/mailboxer.png)](https://gemnasium.com/ging/mailboxer)
+# Mailboxer-mongoid [![](https://secure.travis-ci.org/ging/mailboxer.png)](http://travis-ci.org/ging/mailboxer) [![Gem Version](https://badge.fury.io/rb/mailboxer.png)](http://badge.fury.io/rb/mailboxer) [![](https://gemnasium.com/ging/mailboxer.png)](https://gemnasium.com/ging/mailboxer)
+
+Mailboxer-mongoid is a rebuild of Mailbox (https://github.com/ging/mailboxer) which attempts to support the Mongoid ORM. This project began 1/27/2014 and is in its infancy. This gem should be considered highly unstable and unoptimized. Use at your own risk.
+
+This project is currently being worked on by Peter Kirby
 
 This project is based on the need for a private message system for [ging
 / social\_stream](https://github.com/ging/social_stream). Instead of creating our core message system heavily
