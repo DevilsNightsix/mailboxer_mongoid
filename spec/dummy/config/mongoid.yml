@@ -1,0 +1,22 @@
+development:
+  sessions:
+    default:
+      database: mailboxer_mongoid_development
+      hosts:
+        - localhost:27017
+      options:
+
+  options:
+    raise_not_found_error: false
+
+test:
+  sessions:
+    default:
+      database: mailboxer_mongoid_development_test
+      hosts:
+        - localhost:27017
+      options:
+        max_retries: 1
+        retry_interval: 0
+  options:
+    raise_not_found_error: false
