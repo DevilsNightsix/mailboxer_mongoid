@@ -14,43 +14,33 @@ class MailboxerMongoid::Conversation
   before_validation :clean
 
   scope :participant, lambda {|participant|
-    receipts = MailboxerMongoid::Receipt.desc(:updated_at).recipient(participant)
-    conversation_ids = receipts.collect {|message| message.conversation.id }
+    receipts = MailboxerMongoid::Receipt.recipient(participant)
+    conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
     self.in(id: conversation_ids).desc(:updated_at)
   }
   scope :inbox, lambda {|participant|
-    receipts = MailboxerMongoid::Receipt.desc(:updated_at).recipient(participant).inbox.not_trash.not_deleted
-
-    conversation_ids = receipts.collect {|message| message.conversation.id }
-
+    receipts = MailboxerMongoid::Receipt.recipient(participant).inbox.not_trash.not_deleted
+    conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
     self.in(id: conversation_ids).desc(:updated_at)
   }
   scope :sentbox, lambda {|participant|
-    receipts = MailboxerMongoid::Receipt.desc(:updated_at).recipient(participant).sentbox.not_trash.not_deleted
-
-    conversation_ids = receipts.collect {|message| message.conversation.id }
-
+    receipts = MailboxerMongoid::Receipt.recipient(participant).sentbox.not_trash.not_deleted
+    conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
     self.in(id: conversation_ids).desc(:updated_at)
   }
   scope :trash, lambda {|participant|
-    receipts = MailboxerMongoid::Receipt.desc(:updated_at).recipient(participant).trash
-
-    conversation_ids = receipts.collect {|message| message.conversation.id }
-
+    receipts = MailboxerMongoid::Receipt.recipient(participant).trash
+    conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
     self.in(id: conversation_ids).desc(:updated_at)
   }
   scope :unread,  lambda {|participant|
-    receipts = MailboxerMongoid::Receipt.desc(:updated_at).recipient(participant).is_unread
-
-    conversation_ids = receipts.collect {|message| message.conversation.id }
-
+    receipts = MailboxerMongoid::Receipt.recipient(participant).is_unread
+    conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
     self.in(id: conversation_ids).desc(:updated_at)
   }
   scope :not_trash,  lambda {|participant|
-    receipts = MailboxerMongoid::Receipt.desc(:updated_at).recipient(participant).not_trash
-
-    conversation_ids = receipts.collect {|message| message.conversation.id }
-
+    receipts = MailboxerMongoid::Receipt.recipient(participant).not_trash
+    conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
     self.in(id: conversation_ids).desc(:updated_at)
   }
 

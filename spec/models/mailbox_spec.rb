@@ -12,8 +12,7 @@ describe MailboxerMongoid::Mailbox do
     @message1 = @receipt1.notification
     @message4 = @receipt4.notification
     @message1.reload
-    @entity1.reload
-    @entity2.reload
+
 
     @conversation = @message1.conversation
   end

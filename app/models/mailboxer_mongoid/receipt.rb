@@ -30,9 +30,9 @@ class MailboxerMongoid::Receipt
     where(:notification_id => notification.id)
   }
   scope :conversation, lambda { |conversation|
-    notifications = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
-    notification_ids = notifications.collect {|notification| notification.id.to_s}
-    self.in(notification_id: notification_ids)
+    messages = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
+    messages_ids = messages.collect {|message| message.id.to_s}
+    self.in(notification_id: messages_ids)
   }
   scope :sentbox, lambda { where(:mailbox_type => "sentbox").asc(:updated_at) }
   scope :inbox, lambda { where(:mailbox_type => "inbox") }
