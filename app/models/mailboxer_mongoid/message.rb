@@ -1,6 +1,7 @@
 class MailboxerMongoid::Message < MailboxerMongoid::Notification
   include Mongoid::Document
 
+  # @TODO
   #attr_accessible :attachment if Mailboxer.protected_attributes?
 
   belongs_to :conversation, :class_name => "MailboxerMongoid::Conversation", :validate => true, :autosave => true
@@ -9,11 +10,11 @@ class MailboxerMongoid::Message < MailboxerMongoid::Notification
   class_attribute :on_deliver_callback
   protected :on_deliver_callback
 
-
   scope :conversation, lambda { |conversation|
     where(:conversation_id => conversation.id)
   }
 
+  # @TODO -> gridfs?
   #mount_uploader :attachment, AttachmentUploader
 
   class << self

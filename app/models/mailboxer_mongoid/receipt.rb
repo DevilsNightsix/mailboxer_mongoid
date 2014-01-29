@@ -7,16 +7,13 @@ class MailboxerMongoid::Receipt
   field :deleted, type: Boolean, default: false
   field :mailbox_type, type: String
 
-  #attr_accessible :trashed, :is_read, :deleted if Mailboxer.protected_attributes?
+  attr_accessible :trashed, :is_read, :deleted if MailboxerMongoid.protected_attributes?
 
   belongs_to :notification, :class_name => "MailboxerMongoid::Notification", :validate => true, :autosave => true
   belongs_to :receiver, :polymorphic => true
   belongs_to :message, :class_name => "MailboxerMongoid::Message", :foreign_key => "notification_id"
 
-
   validates_presence_of :receiver
-
-  index({ updated_at: -1 })
 
   scope :recipient, lambda { |recipient|
     where(:receiver_id => recipient.id.to_s, :receiver_type => recipient.class.to_s)
@@ -98,7 +95,6 @@ class MailboxerMongoid::Receipt
         ids << rcp.id
       end
 
-      # @TODO unsure about this
       unless ids.empty?
         self.in(id: ids).update_all(updates)
       end

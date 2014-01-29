@@ -1,31 +1,21 @@
 class MailboxerMongoid::Conversation
   include Mongoid::Document
   include Mongoid::Timestamps
-  field :subject, type: String, default: ""
-  #field :created_at, type: DateTime
-  #field :updated_at, type: DateTime
 
-  #attr_accessible :subject if Mailboxer.protected_attributes?
+  field :subject, type: String, default: ""
+
+  attr_accessible :subject if MailboxerMongoid.protected_attributes?
 
   has_many :messages, :dependent => :destroy, :class_name => "MailboxerMongoid::Message"
-  #has_and_belongs_to_many :receipts, :class_name => "Mailboxer::Receipt"
+  #has_many :receipts, :through => :messages, :class_name => "MailboxerMongoid::Receipt"
 
   validates_presence_of :subject
 
   before_validation :clean
 
   scope :participant, lambda {|participant|
-
     receipts = MailboxerMongoid::Receipt.desc(:updated_at).recipient(participant)
-
     conversation_ids = receipts.collect {|message| message.conversation.id }
-
-
-    #raise 'CANNOT USE THIS METHOD YET'
-    #select('DISTINCT mailboxer_conversations.*').
-    #  where('mailboxer_notifications.type'=> Mailboxer::Message.name).
-    #  order("mailboxer_conversations.updated_at DESC").
-    #  joins(:receipts).merge(Mailboxer::Receipt.recipient(participant))
     self.in(id: conversation_ids).desc(:updated_at)
   }
   scope :inbox, lambda {|participant|
@@ -63,13 +53,6 @@ class MailboxerMongoid::Conversation
 
     self.in(id: conversation_ids).desc(:updated_at)
   }
-
-  #def receipts
-  #  raise 'DONT USE THIS YET'
-  #  receipts = messages.collect{|message| message.receipts}
-  #
-  #  receipts.flatten!
-  #end
 
   #Mark the conversation as read for one of the participants
   def mark_as_read(participant)

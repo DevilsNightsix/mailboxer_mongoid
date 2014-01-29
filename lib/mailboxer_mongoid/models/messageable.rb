@@ -14,12 +14,7 @@ module MailboxerMongoid
 
       included do
         has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
-        #if Rails::VERSION::MAJOR == 4
         has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
-        #else
-          # Rails 3 does it this way
-          #has_many :receipts, :order => 'created_at DESC',    :class_name => "Mailboxer::Receipt", :dependent => :destroy, :as => :receiver
-        #end
       end
 
       unless defined?(MailboxerMongoid.name_method)
@@ -217,6 +212,7 @@ module MailboxerMongoid
       end
 
       def search_messages(query)
+        raise "not ready for use"
         @search = MailboxerMongoid::Receipt.search do
           fulltext query
           with :receiver_id, self.id
