@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "Mailboxer::Models::Messageable through User" do
+describe "MailboxerMongoid::Models::Messageable through User" do
 
   before do
     @entity1 = FactoryGirl.create(:user)

@@ -17,7 +17,7 @@ class MailboxerMongoid::Notification
 
   belongs_to :sender, :polymorphic => true
   belongs_to :notified_object, :polymorphic => true
-  has_many :receipts, :dependent => :destroy, :class_name => "Mailboxer::Receipt"
+  has_many :receipts, :dependent => :destroy, :class_name => "MailboxerMongoid::Receipt"
 
   validates_presence_of :subject, :body
 

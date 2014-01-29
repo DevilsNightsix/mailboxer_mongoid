@@ -7,7 +7,7 @@ class MailboxerMongoid::Conversation
 
   #attr_accessible :subject if Mailboxer.protected_attributes?
 
-  has_many :messages, :dependent => :destroy, :class_name => "Mailboxer::Message"
+  has_many :messages, :dependent => :destroy, :class_name => "MailboxerMongoid::Message"
   #has_and_belongs_to_many :receipts, :class_name => "Mailboxer::Receipt"
 
   validates_presence_of :subject

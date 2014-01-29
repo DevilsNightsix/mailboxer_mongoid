@@ -6,6 +6,7 @@ require 'mongoid'
 require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 require "rspec/rails"
 
+
 Mongoid.load!("#{File.dirname(__FILE__)}/mongoid.yml")
 
 ActionMailer::Base.delivery_method = :test
