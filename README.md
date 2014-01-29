@@ -1,6 +1,6 @@
-# Mailboxer-mongoid
+# Mailboxer_mongoid
 
-Mailboxer-mongoid is a rebuild of Mailbox (https://github.com/ging/mailboxer) which attempts to support the Mongoid ORM. This project began 1/27/2014 and is in its infancy. This gem should be considered highly unstable and unoptimized. Use at your own risk.
+Mailboxer_mongoid is a rebuild of Mailbox (https://github.com/ging/mailboxer) which attempts to support the Mongoid ORM. This project began 1/27/2014 and is in its infancy. This gem should be considered highly unstable and unoptimized. Use at your own risk.
 
 This project is currently being worked on by Peter Kirby
 
