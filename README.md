@@ -39,7 +39,7 @@ Installation
 Add to your Gemfile:
 
 ```ruby
-gem 'mailboxer'
+gem 'mailboxer', git: 'git@github.com:peterjkirby/mailboxer_mongoid.git'
 ```
 
 Then run:
@@ -52,12 +52,6 @@ Run install script:
 
 ```sh
 $ rails g mailboxer:install
-```
-
-And don't forget to migrate your database:
-
-```sh
-$ rake db:migrate
 ```
 
 ## Requirements & Settings
