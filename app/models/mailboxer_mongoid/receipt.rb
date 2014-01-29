@@ -5,10 +5,6 @@ class MailboxerMongoid::Receipt
   field :is_read, type: Boolean, default: false
   field :trashed, type: Boolean, default: false
   field :deleted, type: Boolean, default: false
-
-  #field :created_at, type: DateTime
-  #field :updated_at, type: DateTime
-  include Mongoid::Timestamps::Updated
   field :mailbox_type, type: String
 
   #attr_accessible :trashed, :is_read, :deleted if Mailboxer.protected_attributes?
@@ -40,7 +36,6 @@ class MailboxerMongoid::Receipt
     notifications = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
     notification_ids = notifications.collect {|notification| notification.id.to_s}
     self.in(notification_id: notification_ids)
-    #joins(:message).where('mailboxer_notifications.conversation_id' => conversation.id)
   }
   scope :sentbox, lambda { where(:mailbox_type => "sentbox").asc(:updated_at) }
   scope :inbox, lambda { where(:mailbox_type => "inbox") }

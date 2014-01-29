@@ -12,7 +12,8 @@ class MailboxerMongoid::Mailbox
   #Returns the notifications for the messageable
   def notifications(options = {})
     #:type => nil is a hack not to give Messages as Notifications
-    notifs = MailboxerMongoid::Notification.recipient(@messageable).where(:_type => nil).desc(:created_at)
+
+    notifs = MailboxerMongoid::Notification.recipient(@messageable).where(:type => nil).desc(:created_at)
     if (options[:read].present? and options[:read]==false) or (options[:unread].present? and options[:unread]==true)
       notifs = notifs.unread
     end

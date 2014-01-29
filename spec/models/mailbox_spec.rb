@@ -14,7 +14,6 @@ describe MailboxerMongoid::Mailbox do
     @message1.reload
     @entity1.reload
     @entity2.reload
-    #@rece
 
     @conversation = @message1.conversation
   end

@@ -30,6 +30,7 @@ class MailboxerMongoid::Notification
     where('notified_object_id' => obj.id,'notified_object_type' => obj.class.to_s)
   }
   scope :not_trashed, lambda {
+    #raise :do_not_use
     joins(:receipts).where('mailboxer_receipts.trashed' => false)
   }
   scope :unread,  lambda {
