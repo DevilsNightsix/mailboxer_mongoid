@@ -2,7 +2,8 @@
 ENV["RAILS_ENV"] = "test"
 
 require 'mongoid'
-
+#Moped.logger = Logger.new($stdout)
+#Moped.logger.level = Logger::INFO
 require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 require "rspec/rails"
 

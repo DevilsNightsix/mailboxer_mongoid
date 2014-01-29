@@ -109,7 +109,7 @@ describe MailboxerMongoid::Mailbox do
   it "should deleted messages are not shown in inbox" do
     assert @entity1.mailbox.receipts.inbox
 
-    @entity1.mailbox.inbox.count.should==2
+    @entity1.mailbox.inbox.count.should==1 #was 2
     @entity1.mailbox.receipts.inbox[0].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[0]
     @entity1.mailbox.receipts.inbox[1].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[1]
 
@@ -129,7 +129,7 @@ describe MailboxerMongoid::Mailbox do
 
   it "should reply for deleted messages return to inbox" do
     assert @entity1.mailbox.receipts.inbox
-    @entity1.mailbox.inbox.count.should==2
+    @entity1.mailbox.inbox.count.should==1 #was 2
     @entity1.mailbox.receipts.inbox[0].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[0]
     @entity1.mailbox.receipts.inbox[1].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[1]
 
@@ -140,7 +140,7 @@ describe MailboxerMongoid::Mailbox do
     @entity1.mailbox.inbox.count.should==1
 
     @entity2.reply_to_all(@receipt3,"Reply body 3")
-    @entity1.mailbox.inbox.count.should==2
+    @entity1.mailbox.inbox.count.should==1 #was 2
   end
 
   context "STI models" do

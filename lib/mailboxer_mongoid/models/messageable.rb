@@ -11,7 +11,6 @@ module MailboxerMongoid
         end
       end
 
-
       included do
         has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
         has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
