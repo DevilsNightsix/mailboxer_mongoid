@@ -1,4 +1,4 @@
-class Mailboxer::Message < Mailboxer::Notification
+class MailboxerMongoid::Message < MailboxerMongoid::Notification
   include Mongoid::Document
 
   #attr_accessible :attachment if Mailboxer.protected_attributes?
@@ -40,7 +40,7 @@ class Mailboxer::Message < Mailboxer::Notification
 
       temp_receipts.each(&:save!) 	#Save receipts
 
-      Mailboxer::MailDispatcher.new(self, recipients).call
+      MailboxerMongoid::MailDispatcher.new(self, recipients).call
 
       conversation.touch if reply
 

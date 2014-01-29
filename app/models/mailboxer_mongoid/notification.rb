@@ -1,4 +1,4 @@
-class Mailboxer::Notification
+class MailboxerMongoid::Notification
   include Mongoid::Document
   include Mongoid::Timestamps
 
@@ -33,7 +33,7 @@ class Mailboxer::Notification
     joins(:receipts).where('mailboxer_receipts.trashed' => false)
   }
   scope :unread,  lambda {
-    notification_ids = Mailboxer::Receipt.where(is_read: false).collect {|receipt| receipt.notification.id}
+    notification_ids = MailboxerMongoid::Receipt.where(is_read: false).collect {|receipt| receipt.notification.id}
     self.in(id: notification_ids)
   }
 
@@ -44,7 +44,7 @@ class Mailboxer::Notification
   class << self
     #Sends a Notification to all the recipients
     def notify_all(recipients,subject,body,obj = nil,sanitize_text = true,notification_code=nil,send_mail=true)
-      notification = Mailboxer::Notification.new({:body => body, :subject => subject})
+      notification = MailboxerMongoid::Notification.new({:body => body, :subject => subject})
       notification.recipients        = Array(recipients).uniq
       notification.notified_object   = obj               if obj.present?
       notification.notification_code = notification_code if notification_code.present?
@@ -55,7 +55,7 @@ class Mailboxer::Notification
     #successful or +false+ if some error raised
     def successful_delivery? receipts
       case receipts
-      when Mailboxer::Receipt
+      when MailboxerMongoid::Receipt
         receipts.valid?
         receipts.errors.empty?
       when Array
@@ -97,7 +97,7 @@ class Mailboxer::Notification
 
     if temp_receipts.all?(&:valid?)
       temp_receipts.each(&:save!)   #Save receipts
-      Mailboxer::MailDispatcher.new(self, recipients).call if send_mail
+      MailboxerMongoid::MailDispatcher.new(self, recipients).call if send_mail
       self.recipients = nil
     end
 
@@ -121,7 +121,7 @@ class Mailboxer::Notification
 
   #Returns the receipt for the participant
   def receipt_for(participant)
-    Mailboxer::Receipt.notification(self).recipient(participant)
+    MailboxerMongoid::Receipt.notification(self).recipient(participant)
   end
 
   #Returns the receipt for the participant. Alias for receipt_for(participant)
@@ -194,13 +194,13 @@ class Mailboxer::Notification
   end
 
   def sanitize(text)
-    ::Mailboxer::Cleaner.instance.sanitize(text)
+    ::MailboxerMongoid::Cleaner.instance.sanitize(text)
   end
 
   private
 
   def build_receipt(receiver, mailbox_type, is_read = false)
-    receipt = Mailboxer::Receipt.new.tap do |receipt|
+    receipt = MailboxerMongoid::Receipt.new.tap do |receipt|
       receipt.notification = self
       receipt.is_read = is_read
       receipt.receiver = receiver

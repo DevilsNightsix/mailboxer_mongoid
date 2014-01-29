@@ -1,24 +1,24 @@
 require 'spec_helper'
 
-describe Mailboxer::MailDispatcher do
+describe MailboxerMongoid::MailDispatcher do
 
   subject(:instance) { described_class.new(mailable, recipients) }
 
-  let(:mailable)   { Mailboxer::Notification.new }
+  let(:mailable)   { MailboxerMongoid::Notification.new }
   let(:recipient1) { double 'recipient1', mailboxer_email: ''  }
   let(:recipient2) { double 'recipient2', mailboxer_email: 'foo@bar.com'  }
   let(:recipients) { [ recipient1, recipient2 ] }
 
   describe "call" do
     context "no emails" do
-      before { Mailboxer.uses_emails = false }
-      after  { Mailboxer.uses_emails = true }
+      before { MailboxerMongoid.uses_emails = false }
+      after  { MailboxerMongoid.uses_emails = true }
       its(:call) { should be_false }
     end
 
     context "mailer wants array" do
-      before { Mailboxer.mailer_wants_array = true  }
-      after  { Mailboxer.mailer_wants_array = false }
+      before { MailboxerMongoid.mailer_wants_array = true  }
+      after  { MailboxerMongoid.mailer_wants_array = false }
       it 'sends collection' do
         subject.should_receive(:send_email).with(recipients)
         subject.call
@@ -45,8 +45,8 @@ describe Mailboxer::MailDispatcher do
     context "with custom_deliver_proc" do
       let(:my_proc) { double 'proc' }
 
-      before { Mailboxer.custom_deliver_proc = my_proc }
-      after  { Mailboxer.custom_deliver_proc = nil     }
+      before { MailboxerMongoid.custom_deliver_proc = my_proc }
+      after  { MailboxerMongoid.custom_deliver_proc = nil     }
       it "triggers proc" do
         my_proc.should_receive(:call).with(mailer, mailable, recipient1)
         subject.send :send_email, recipient1
@@ -69,25 +69,25 @@ describe Mailboxer::MailDispatcher do
     let(:recipients) { [] }
 
     context "mailable is a Message" do
-      let(:mailable) { Mailboxer::Notification.new }
+      let(:mailable) { MailboxerMongoid::Notification.new }
 
-      its(:mailer) { should be Mailboxer::NotificationMailer }
+      its(:mailer) { should be MailboxerMongoid::NotificationMailer }
 
       context "with custom mailer" do
-        before { Mailboxer.notification_mailer = 'foo' }
-        after  { Mailboxer.notification_mailer = nil   }
+        before { MailboxerMongoid.notification_mailer = 'foo' }
+        after  { MailboxerMongoid.notification_mailer = nil   }
 
         its(:mailer) { should eq 'foo' }
       end
     end
 
     context "mailable is a Notification" do
-      let(:mailable) { Mailboxer::Message.new }
-      its(:mailer) { should be Mailboxer::MessageMailer }
+      let(:mailable) { MailboxerMongoid::Message.new }
+      its(:mailer) { should be MailboxerMongoid::MessageMailer }
 
       context "with custom mailer" do
-        before { Mailboxer.message_mailer = 'foo' }
-        after  { Mailboxer.message_mailer = nil   }
+        before { MailboxerMongoid.message_mailer = 'foo' }
+        after  { MailboxerMongoid.message_mailer = nil   }
 
         its(:mailer) { should eq 'foo' }
       end

@@ -1,12 +1,12 @@
-Mailboxer.setup do |config|
+MailboxerMongoid.setup do |config|
 
   #Configures if you application uses or not email sending for Notifications and Messages
   config.uses_emails = true
 
   #Configures the default from for emails sent for Messages and Notifications
-  config.default_from = "no-reply@mailboxer.com"
+  config.default_from = "no-reply@mailboxer_mongoid.com"
 
-  #Configures the methods needed by mailboxer
+  #Configures the methods needed by mailboxer_mongoid
   config.email_method = :mailboxer_email
   config.name_method = :name
 

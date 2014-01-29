@@ -1,4 +1,4 @@
-class Mailboxer::Receipt
+class MailboxerMongoid::Receipt
   include Mongoid::Document
   include Mongoid::Timestamps
 
@@ -32,12 +32,12 @@ class Mailboxer::Receipt
     joins(:notification).where('mailboxer_notifications.type' => nil) }
   scope :messages_receipts, lambda {
     raise 'cannot use messages receipts yet'
-    joins(:notification).where('mailboxer_notifications.type' => Mailboxer::Message.to_s) }
+    joins(:notification).where('mailboxer_notifications.type' => MailboxerMongoid::Message.to_s) }
   scope :notification, lambda { |notification|
     where(:notification_id => notification.id)
   }
   scope :conversation, lambda { |conversation|
-    notifications = Mailboxer::Message.where(:conversation_id => conversation.id.to_s)
+    notifications = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
     notification_ids = notifications.collect {|notification| notification.id.to_s}
     self.in(notification_id: notification_ids)
     #joins(:message).where('mailboxer_notifications.conversation_id' => conversation.id)
@@ -153,7 +153,7 @@ class Mailboxer::Receipt
 
   #Returns the conversation associated to the receipt if the notification is a Message
   def conversation
-    message.conversation if message.is_a? Mailboxer::Message
+    message.conversation if message.is_a? MailboxerMongoid::Message
   end
 
   #Returns if the participant have read the Notification
@@ -178,7 +178,7 @@ class Mailboxer::Receipt
     end
   end
 
-  if Mailboxer.search_enabled
+  if MailboxerMongoid.search_enabled
     searchable do
       text :subject, :boost => 5 do
         message.subject if message

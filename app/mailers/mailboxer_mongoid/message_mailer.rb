@@ -1,4 +1,4 @@
-class Mailboxer::MessageMailer < Mailboxer::BaseMailer
+class MailboxerMongoid::MessageMailer < MailboxerMongoid::BaseMailer
   #Sends and email for indicating a new message or a reply to a receiver.
   #It calls new_message_email if notifing a new message and reply_message_email
   #when indicating a reply to an already created conversation.
@@ -15,8 +15,8 @@ class Mailboxer::MessageMailer < Mailboxer::BaseMailer
     @message  = message
     @receiver = receiver
     set_subject(message)
-    mail :to => receiver.send(Mailboxer.email_method, message),
-         :subject => t('mailboxer.message_mailer.subject_new', :subject => @subject),
+    mail :to => receiver.send(MailboxerMongoid.email_method, message),
+         :subject => t('mailboxer_mongoid.message_mailer.subject_new', :subject => @subject),
          :template_name => 'new_message_email'
   end
 
@@ -25,8 +25,8 @@ class Mailboxer::MessageMailer < Mailboxer::BaseMailer
     @message  = message
     @receiver = receiver
     set_subject(message)
-    mail :to => receiver.send(Mailboxer.email_method, message),
-         :subject => t('mailboxer.message_mailer.subject_reply', :subject => @subject),
+    mail :to => receiver.send(MailboxerMongoid.email_method, message),
+         :subject => t('mailboxer_mongoid.message_mailer.subject_reply', :subject => @subject),
          :template_name => 'reply_message_email'
   end
 end

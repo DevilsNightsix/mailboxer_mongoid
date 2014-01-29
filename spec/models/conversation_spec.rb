@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Mailboxer::Conversation do
+describe MailboxerMongoid::Conversation do
 
   before do
     @entity1 = FactoryGirl.create(:user)
@@ -48,7 +48,7 @@ describe Mailboxer::Conversation do
   it "should be removed from the database once deleted by all participants" do
     @conversation.mark_as_deleted(@entity1)
     @conversation.mark_as_deleted(@entity2)
-    Mailboxer::Conversation.where(id: @conversation.id).exists?.should be_false
+    MailboxerMongoid::Conversation.where(id: @conversation.id).exists?.should be_false
   end
 
   it "should be able to be marked as read" do
@@ -87,19 +87,19 @@ describe Mailboxer::Conversation do
 
     describe ".participant" do
       it "finds conversations with receipts for participant" do
-        Mailboxer::Conversation.participant(participant).entries.should == [sentbox_conversation, inbox_conversation]
+        MailboxerMongoid::Conversation.participant(participant).entries.should == [sentbox_conversation, inbox_conversation]
       end
     end
 
     describe ".inbox" do
       it "finds inbox conversations with receipts for participant" do
-        Mailboxer::Conversation.inbox(participant).entries.should == [inbox_conversation]
+        MailboxerMongoid::Conversation.inbox(participant).entries.should == [inbox_conversation]
       end
     end
 
     describe ".sentbox" do
       it "finds sentbox conversations with receipts for participant" do
-        Mailboxer::Conversation.sentbox(participant).entries.should == [sentbox_conversation]
+        MailboxerMongoid::Conversation.sentbox(participant).entries.should == [sentbox_conversation]
       end
     end
 
@@ -108,7 +108,7 @@ describe Mailboxer::Conversation do
         trashed_conversation = @entity1.send_message(participant, "Body", "Subject").notification.conversation
         trashed_conversation.move_to_trash(participant)
 
-        Mailboxer::Conversation.trash(participant).should == [trashed_conversation]
+        MailboxerMongoid::Conversation.trash(participant).should == [trashed_conversation]
       end
     end
 
@@ -117,7 +117,7 @@ describe Mailboxer::Conversation do
         [sentbox_conversation, inbox_conversation].each {|c| c.mark_as_read(participant) }
         unread_conversation = @entity1.send_message(participant, "Body", "Subject").notification.conversation
 
-        Mailboxer::Conversation.unread(participant).should == [unread_conversation]
+        MailboxerMongoid::Conversation.unread(participant).should == [unread_conversation]
       end
     end
   end

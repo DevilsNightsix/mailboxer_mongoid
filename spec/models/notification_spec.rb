@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Mailboxer::Notification do
+describe MailboxerMongoid::Notification do
 
   before do
     @entity1 = FactoryGirl.create(:user)
@@ -42,7 +42,7 @@ describe Mailboxer::Notification do
 
   it "should notify several users" do
     recipients = Set.new [@entity1,@entity2,@entity3]
-    Mailboxer::Notification.notify_all(recipients,"Subject","Body")
+    MailboxerMongoid::Notification.notify_all(recipients,"Subject","Body")
     #Check getting ALL receipts
     @entity1.mailbox.receipts.size.should==1
     receipt      = @entity1.mailbox.receipts.first
@@ -77,7 +77,7 @@ describe Mailboxer::Notification do
   end
 
   it "should notify a single recipient" do
-    Mailboxer::Notification.notify_all(@entity1,"Subject","Body")
+    MailboxerMongoid::Notification.notify_all(@entity1,"Subject","Body")
 
     #Check getting ALL receipts
     @entity1.mailbox.receipts.size.should==1
@@ -101,7 +101,7 @@ describe Mailboxer::Notification do
       it "finds unread notifications" do
         unread_notification = scope_user.notify("Body", "Subject").notification
         notification.mark_as_read(scope_user)
-        Mailboxer::Notification.unread.last.should == unread_notification
+        MailboxerMongoid::Notification.unread.last.should == unread_notification
       end
     end
 

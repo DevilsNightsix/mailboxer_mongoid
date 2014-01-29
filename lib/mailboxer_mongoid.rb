@@ -1,10 +1,10 @@
-module Mailboxer
+module MailboxerMongoid
   module Models
-    autoload :Messageable, 'mailboxer/models/messageable'
+    autoload :Messageable, 'mailboxer_mongoid/models/messageable'
   end
 
   mattr_accessor :default_from
-  @@default_from = "no-reply@mailboxer.com"
+  @@default_from = "no-reply@mailboxer_mongoid.com"
   mattr_accessor :uses_emails
   @@uses_emails = true
   mattr_accessor :mailer_wants_array
@@ -34,6 +34,6 @@ module Mailboxer
 end
 # reopen ActiveRecord and include all the above to make
 # them available to all our models if they want it
-require 'mailboxer/engine'
-require 'mailboxer/cleaner'
-require 'mailboxer/mail_dispatcher'
+require 'mailboxer_mongoid/engine'
+require 'mailboxer_mongoid/cleaner'
+require 'mailboxer_mongoid/mail_dispatcher'

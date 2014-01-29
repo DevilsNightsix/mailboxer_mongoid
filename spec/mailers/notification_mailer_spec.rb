@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe Mailboxer::NotificationMailer do
+describe MailboxerMongoid::NotificationMailer do
   before do
     @entity1 = FactoryGirl.create(:user)
     @entity2 = FactoryGirl.create(:duck)
     @entity3 = FactoryGirl.create(:cylon)
-    @receipt1 = Mailboxer::Notification.notify_all([@entity1,@entity2,@entity3],"Subject", "Body Body Body Body Body Body Body Body Body Body Body Body")
+    @receipt1 = MailboxerMongoid::Notification.notify_all([@entity1,@entity2,@entity3],"Subject", "Body Body Body Body Body Body Body Body Body Body Body Body")
   end
 
   it "should send emails when should_email? is true (2 out of 3)" do

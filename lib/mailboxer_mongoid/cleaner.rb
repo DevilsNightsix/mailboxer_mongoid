@@ -1,6 +1,6 @@
 require 'singleton'
 
-module Mailboxer
+module MailboxerMongoid
   class Cleaner
     include Singleton
     include ActionView::Helpers::SanitizeHelper

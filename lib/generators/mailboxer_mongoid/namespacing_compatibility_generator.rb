@@ -1,4 +1,4 @@
-class Mailboxer::NamespacingCompatibilityGenerator < Rails::Generators::Base
+class MailboxerMongoid::NamespacingCompatibilityGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
   source_root File.expand_path('../templates', __FILE__)
   require 'rails/generators/migration'

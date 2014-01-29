@@ -6,7 +6,7 @@ require "sprockets/railtie"
 require "rails/test_unit/railtie"
 
 Bundler.require(:default, Rails.env) if defined?(Bundler)
-require "mailboxer"
+require "mailboxer_mongoid"
 
 module Dummy
   class Application < Rails::Application

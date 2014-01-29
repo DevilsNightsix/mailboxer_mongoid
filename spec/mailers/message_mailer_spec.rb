@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Mailboxer::MessageMailer do
+describe MailboxerMongoid::MessageMailer do
   shared_examples 'message_mailer' do
     let(:sender) { FactoryGirl.create(:user) }
     let(:entity1) { FactoryGirl.create(:user) }
@@ -66,8 +66,8 @@ describe Mailboxer::MessageMailer do
   end
 
   context "mailer_wants_array is true" do
-    class ArrayMailer < Mailboxer::MessageMailer
-      default template_path: 'mailboxer/message_mailer'
+    class ArrayMailer < MailboxerMongoid::MessageMailer
+      default template_path: 'mailboxer_mongoid/message_mailer'
 
       def new_message_email(message, receivers)
         receivers.each { |receiver| super(message, receiver) if receiver.mailboxer_email(message).present? }
@@ -79,13 +79,13 @@ describe Mailboxer::MessageMailer do
     end
 
     before :all do
-      Mailboxer.mailer_wants_array = true
-      Mailboxer.message_mailer = ArrayMailer
+      MailboxerMongoid.mailer_wants_array = true
+      MailboxerMongoid.message_mailer = ArrayMailer
     end
 
     after :all do
-      Mailboxer.mailer_wants_array = false
-      Mailboxer.message_mailer = Mailboxer::MessageMailer
+      MailboxerMongoid.mailer_wants_array = false
+      MailboxerMongoid.message_mailer = MailboxerMongoid::MessageMailer
     end
 
     it_behaves_like 'message_mailer'

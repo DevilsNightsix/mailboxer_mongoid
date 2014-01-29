@@ -9,9 +9,9 @@ class Duck
 
   def mailboxer_email(object)
     case object
-    when Mailboxer::Message
+    when MailboxerMongoid::Message
       return nil
-    when Mailboxer::Notification
+    when MailboxerMongoid::Notification
       return email
     end
   end

@@ -3,7 +3,7 @@ source 'http://rubygems.org'
 gem 'rails', '>= 3.0.0'
 
 gem 'mongoid',">= 3.0.0"
-gem 'mailboxer', :path => '../../'
+gem 'mailboxer_mongoid', :path => '../../'
 gem 'factory_girl'
 
 # Bundle edge Rails instead:

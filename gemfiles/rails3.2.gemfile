@@ -3,6 +3,6 @@
 source "http://rubygems.org"
 
 gem "rails", "~> 3.2.6"
-gem "mailboxer", :path=>"../"
+gem "mailboxer_mongoid", :path=>"../"
 
 gemspec :path=>"../"

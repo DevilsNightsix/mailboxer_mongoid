@@ -1,19 +1,19 @@
 Gem::Specification.new do |s|
-  s.name = "mailboxer"
+  s.name = "mailboxer_mongoid"
   s.version = "0.01.0"
 
-  s.authors = ["Eduardo Casanova Cuesta"]
+  s.authors = ["Eduardo Casanova Cuesta", "Peter Kirby"]
   s.summary = "Messaging system for rails apps."
   s.description = "This is a version of Mailboxer rebuilt specifically to support mongoid. It has not been thoroughly tested" +
                   " and is likely not optimized. Use at your own risk. Mailboxer-mongoid is being developed by Peter kirby" +
-                  "Check out https://github.com/ging/mailboxer to learn about the original." +
+                  "Check out https://github.com/ging/mailboxer_mongoid to learn about the original." +
                   "A Rails engine that allows any model to act as messageable, adding the ability to exchange messages " +
                    "with any other messageable model, even different ones. It supports the use of conversations with " +
                    "two or more recipients to organize the messages. You have a complete use of a mailbox object for " +
                    "each messageable model that manages an inbox, sentbox and trash for conversations. It also supports " +
                    "sending notifications to messageable models, intended to be used as system notifications."
-  s.email = ""
-  s.homepage = "https://github.com/ging/mailboxer"
+  s.email = "peterjkirby@live.com"
+  s.homepage = "https://github.com/peterjkirby/mailboxer_mongoid-mongoid"
   s.files = `git ls-files`.split("\n")
   s.license = 'MIT'
 

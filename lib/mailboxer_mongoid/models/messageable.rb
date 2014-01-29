@@ -1,4 +1,4 @@
-module Mailboxer
+module MailboxerMongoid
   module Models
     module Messageable
       extend ActiveSupport::Concern
@@ -22,45 +22,45 @@ module Mailboxer
         #end
       end
 
-      unless defined?(Mailboxer.name_method)
+      unless defined?(MailboxerMongoid.name_method)
         # Returning any kind of identification you want for the model
-        define_method Mailboxer.name_method do
+        define_method MailboxerMongoid.name_method do
           begin
             super
           rescue NameError
-            return "You should add method :#{Mailboxer.name_method} in your Messageable model"
+            return "You should add method :#{MailboxerMongoid.name_method} in your Messageable model"
           end
         end
       end
 
-      unless defined?(Mailboxer.email_method)
+      unless defined?(MailboxerMongoid.email_method)
         #Returning the email address of the model if an email should be sent for this object (Message or Notification).
         #If no mail has to be sent, return nil.
-        define_method Mailboxer.email_method do |object|
+        define_method MailboxerMongoid.email_method do |object|
           begin
             super
           rescue NameError
-            return "You should add method :#{Mailboxer.email_method} in your Messageable model"
+            return "You should add method :#{MailboxerMongoid.email_method} in your Messageable model"
           end
         end
       end
 
       #Gets the mailbox of the messageable
       def mailbox
-        @mailbox = Mailboxer::Mailbox.new(self) if @mailbox.nil?
+        @mailbox = MailboxerMongoid::Mailbox.new(self) if @mailbox.nil?
         @mailbox.type = :all
         @mailbox
       end
 
       #Sends a notification to the messageable
       def notify(subject,body,obj = nil,sanitize_text=true,notification_code=nil,send_mail=true)
-        Mailboxer::Notification.notify_all([self],subject,body,obj,sanitize_text,notification_code,send_mail)
+        MailboxerMongoid::Notification.notify_all([self],subject,body,obj,sanitize_text,notification_code,send_mail)
       end
 
       #Sends a messages, starting a new conversation, with the messageable
       #as originator
       def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now)
-        convo = Mailboxer::Conversation.new({:subject => subject})
+        convo = MailboxerMongoid::Conversation.new({:subject => subject})
         convo.created_at = message_timestamp
         convo.updated_at = message_timestamp
         message = messages.new({:body => msg_body, :subject => subject, :attachment => attachment})
@@ -119,11 +119,11 @@ module Mailboxer
       #* An array with any of them
       def mark_as_read(obj)
         case obj
-        when Mailboxer::Receipt
+        when MailboxerMongoid::Receipt
           obj.mark_as_read if obj.receiver == self
-        when Mailboxer::Message, Mailboxer::Notification
+        when MailboxerMongoid::Message, MailboxerMongoid::Notification
           obj.mark_as_read(self)
-        when Mailboxer::Conversation
+        when MailboxerMongoid::Conversation
           obj.mark_as_read(self)
         when Array
           obj.map{ |sub_obj| mark_as_read(sub_obj) }
@@ -140,11 +140,11 @@ module Mailboxer
       #* An array with any of them
       def mark_as_unread(obj)
         case obj
-        when Mailboxer::Receipt
+        when MailboxerMongoid::Receipt
           obj.mark_as_unread if obj.receiver == self
-        when Mailboxer::Message, Mailboxer::Notification
+        when MailboxerMongoid::Message, MailboxerMongoid::Notification
           obj.mark_as_unread(self)
-        when Mailboxer::Conversation
+        when MailboxerMongoid::Conversation
           obj.mark_as_unread(self)
         when Array
           obj.map{ |sub_obj| mark_as_unread(sub_obj) }
@@ -184,11 +184,11 @@ module Mailboxer
       #* An array with any of them
       def trash(obj)
         case obj
-        when Mailboxer::Receipt
+        when MailboxerMongoid::Receipt
           obj.move_to_trash if obj.receiver == self
-        when Mailboxer::Message, Mailboxer::Notification
+        when MailboxerMongoid::Message, MailboxerMongoid::Notification
           obj.move_to_trash(self)
-        when Mailboxer::Conversation
+        when MailboxerMongoid::Conversation
           obj.move_to_trash(self)
         when Array
           obj.map{ |sub_obj| trash(sub_obj) }
@@ -205,11 +205,11 @@ module Mailboxer
       #* An array with any of them
       def untrash(obj)
         case obj
-        when Mailboxer::Receipt
+        when MailboxerMongoid::Receipt
           obj.untrash if obj.receiver == self
-        when Mailboxer::Message, Mailboxer::Notification
+        when MailboxerMongoid::Message, MailboxerMongoid::Notification
           obj.untrash(self)
-        when Mailboxer::Conversation
+        when MailboxerMongoid::Conversation
           obj.untrash(self)
         when Array
           obj.map{ |sub_obj| untrash(sub_obj) }
@@ -217,7 +217,7 @@ module Mailboxer
       end
 
       def search_messages(query)
-        @search = Mailboxer::Receipt.search do
+        @search = MailboxerMongoid::Receipt.search do
           fulltext query
           with :receiver_id, self.id
         end

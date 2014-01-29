@@ -1,5 +1,5 @@
-class Mailboxer::BaseMailer < ActionMailer::Base
-  default :from => Mailboxer.default_from
+class MailboxerMongoid::BaseMailer < ActionMailer::Base
+  default :from => MailboxerMongoid.default_from
 
   private
 
@@ -8,7 +8,7 @@ class Mailboxer::BaseMailer < ActionMailer::Base
   end
 
   def strip_tags(text)
-    ::Mailboxer::Cleaner.instance.strip_tags(text)
+    ::MailboxerMongoid::Cleaner.instance.strip_tags(text)
   end
 
 end

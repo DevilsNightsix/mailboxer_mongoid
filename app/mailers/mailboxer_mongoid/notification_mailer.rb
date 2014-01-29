@@ -1,4 +1,4 @@
-class Mailboxer::NotificationMailer < Mailboxer::BaseMailer
+class MailboxerMongoid::NotificationMailer < MailboxerMongoid::BaseMailer
   #Sends and email for indicating a new notification to a receiver.
   #It calls new_notification_email.
   def send_email(notification, receiver)
@@ -10,8 +10,8 @@ class Mailboxer::NotificationMailer < Mailboxer::BaseMailer
     @notification = notification
     @receiver     = receiver
     set_subject(notification)
-    mail :to => receiver.send(Mailboxer.email_method, notification),
-         :subject => t('mailboxer.notification_mailer.subject', :subject => @subject),
+    mail :to => receiver.send(MailboxerMongoid.email_method, notification),
+         :subject => t('mailboxer_mongoid.notification_mailer.subject', :subject => @subject),
          :template_name => 'new_notification_email'
   end
 end
