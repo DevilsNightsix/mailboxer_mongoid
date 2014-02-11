@@ -12,7 +12,7 @@ module MailboxerMongoid
       end
 
       included do
-        has_one :mailbox, class_name: "MailboxerMongoid::Mailbox", as: :owner, autobuild: true, autosave: true
+        has_one :mailbox, class_name: "MailboxerMongoid::Mailbox", as: :owner, autosave: true
 
         #has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
         #has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
@@ -59,7 +59,8 @@ module MailboxerMongoid
 
         #convo = MailboxerMongoid::Conversation.new({:subject => subject})
         puts '------------------'
-
+        puts mailbox
+        puts mailbox.persisted?
         convo = mailbox.conversations.new({:subject => subject})
         convo.created_at = message_timestamp
         convo.updated_at = message_timestamp
@@ -96,6 +97,11 @@ module MailboxerMongoid
 
       #Replies to all the recipients of the message in the conversation
       def reply_to_all(receipt, reply_body, subject=nil, sanitize_text=true, attachment=nil)
+
+        puts '---------------------------'
+        puts "receipt: #{receipt}"
+        puts "receipt.message: #{receipt.message}"
+
         reply(receipt.conversation, receipt.message.recipients, reply_body, subject, sanitize_text, attachment)
       end
 

@@ -6,12 +6,12 @@ class MailboxerMongoid::Mailbox
 
 
   #attr_accessor :type
-  #attr_reader :messageable
+  attr_reader :messageable
 
   #Initializer method
-  #def initialize(messageable)
-  #  @messageable = messageable
-  #end
+  def initialize(messageable)
+    @messageable = messageable
+  end
 
   #Returns the notifications for the messageable
   def notifications(options = {})

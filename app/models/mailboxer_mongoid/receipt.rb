@@ -7,16 +7,14 @@ class MailboxerMongoid::Receipt
   field :deleted, type: Boolean, default: false
   field :mailbox_type, type: String
 
+  #field :receiver, type: BSON::ObjectId
+
   attr_accessible :trashed, :is_read, :deleted if MailboxerMongoid.protected_attributes?
 
   embedded_in :notification, :class_name => "MailboxerMongoid::Notification", :validate => true
    #belongs_to :notification, :class_name => "MailboxerMongoid::Notification", :validate => true, :autosave => true
-   #belongs_to :receiver, :polymorphic => true
-  #belongs_to :message, :class_name => "MailboxerMongoid::Message", :foreign_key => "notification_id"
-
-  def notification
-
-  end
+  belongs_to :receiver, :polymorphic => true
+  belongs_to :message, :class_name => "MailboxerMongoid::Message", :foreign_key => "notification_id"
 
 
 

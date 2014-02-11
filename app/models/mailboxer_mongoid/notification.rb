@@ -12,21 +12,15 @@ class MailboxerMongoid::Notification
   field :global, type: Boolean, default: false
   field :expires, type: DateTime
 
+
+
   attr_accessor :recipients
   #attr_accessible :body, :subject, :global, :expires if MailboxerMongoid.protected_attributes?
 
-  #belongs_to :sender, :polymorphic => true
+  belongs_to :sender, :polymorphic => true
   #has_and_belongs_to_many :participants, :polymorphic => true
   #belongs_to :notified_object, :polymorphic => true
   embeds_many :receipts, :class_name => "MailboxerMongoid::Receipt"
-
-  def receipts
-    conversations.receipts
-  end
-
-  def receipts=(receipt)
-    conversations.receipts << receipt
-  end
 
   validates_presence_of :subject, :body
 
