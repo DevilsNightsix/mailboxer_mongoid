@@ -44,6 +44,7 @@ module MailboxerMongoid
       #Gets the mailbox of the messageable
       def mailbox
         @mailbox = MailboxerMongoid::Mailbox.new(self) if self[:mailbox].nil?
+        @mailbox ||= mailbox
         @mailbox.type = :all
         @mailbox
       end
