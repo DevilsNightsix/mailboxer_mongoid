@@ -1,7 +1,7 @@
 class MailboxerMongoid::Mailbox
   include Mongoid::Document
 
-  embedded_in :owner, polymorphic: true
+  belongs_to :owner, polymorphic: true
   embeds_many :conversations, :class_name => "MailboxerMongoid::Conversation", inverse_of: :mailbox
 
 

@@ -9,10 +9,9 @@ class MailboxerMongoid::Receipt
 
   attr_accessible :trashed, :is_read, :deleted if MailboxerMongoid.protected_attributes?
 
-
-
-  # belongs_to :notification, :class_name => "MailboxerMongoid::Notification", :validate => true, :autosave => true
-  #belongs_to :receiver, :polymorphic => true
+  embedded_in :notification, :class_name => "MailboxerMongoid::Notification", :validate => true
+   #belongs_to :notification, :class_name => "MailboxerMongoid::Notification", :validate => true, :autosave => true
+   #belongs_to :receiver, :polymorphic => true
   #belongs_to :message, :class_name => "MailboxerMongoid::Message", :foreign_key => "notification_id"
 
   def notification

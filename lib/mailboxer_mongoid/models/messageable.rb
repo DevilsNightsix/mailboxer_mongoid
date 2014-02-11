@@ -12,7 +12,7 @@ module MailboxerMongoid
       end
 
       included do
-        embeds_one :mailbox, class_name: "MailboxerMongoid::Mailbox"
+        has_one :mailbox, class_name: "MailboxerMongoid::Mailbox", as: :owner, autobuild: true, autosave: true
 
         #has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
         #has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
@@ -42,11 +42,11 @@ module MailboxerMongoid
       end
 
       #Gets the mailbox of the messageable
-      #def mailbox
-      #  @mailbox = MailboxerMongoid::Mailbox.new(self) if self[:mailbox].nil?
-      #  @mailbox.type = :all
-      #  @mailbox
-      #end
+      def mailbox
+        @mailbox = MailboxerMongoid::Mailbox.new(self) if self[:mailbox].nil?
+        @mailbox.type = :all
+        @mailbox
+      end
 
       #Sends a notification to the messageable
       def notify(subject,body,obj = nil,sanitize_text=true,notification_code=nil,send_mail=true)
@@ -59,12 +59,8 @@ module MailboxerMongoid
 
         #convo = MailboxerMongoid::Conversation.new({:subject => subject})
         puts '------------------'
-        if self.mailbox.nil?
-          self.mailbox = MailboxerMongoid::Mailbox.new()
-        end
 
         convo = mailbox.conversations.new({:subject => subject})
-
         convo.created_at = message_timestamp
         convo.updated_at = message_timestamp
 
@@ -72,6 +68,7 @@ module MailboxerMongoid
         message.created_at = message_timestamp
         message.updated_at = message_timestamp
         #message.conversation = convo
+
         message.recipients = recipients.is_a?(Array) ? recipients : [recipients]
         message.recipients = message.recipients.uniq
         receipt = message.deliver false, sanitize_text
