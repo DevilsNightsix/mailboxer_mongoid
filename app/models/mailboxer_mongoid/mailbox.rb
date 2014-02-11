@@ -1,12 +1,14 @@
 class MailboxerMongoid::Mailbox
   include Mongoid::Document
 
-  belongs_to :owner, polymorphic: true
-  embeds_many :conversations, :class_name => "MailboxerMongoid::Conversation", inverse_of: :mailbox
+  #field :type, type: Symbol
+
+  #belongs_to :owner, polymorphic: true
+  #embeds_many :conversations, :class_name => "MailboxerMongoid::Conversation"#, inverse_of: :mailbox
 
 
-  #attr_accessor :type
-  attr_reader :messageable
+  attr_accessor :type
+  attr_accessor :messageable
 
   #Initializer method
   def initialize(messageable)

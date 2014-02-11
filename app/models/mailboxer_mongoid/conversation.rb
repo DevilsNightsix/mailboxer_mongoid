@@ -4,9 +4,12 @@ class MailboxerMongoid::Conversation
 
   field :subject, type: String, default: ""
 
+  field :participants, type: Array
+
   #attr_accessible :subject if MailboxerMongoid.protected_attributes?
 
-  embedded_in :mailbox, class_name: "MailboxerMongoid::Mailbox", inverse_of: :conversations
+  #embedded_in :mailbox, class_name: "MailboxerMongoid::Mailbox", inverse_of: :conversations
+  #belongs_to :participant, :polymorphic => true
   embeds_many :messages, :class_name => "MailboxerMongoid::Message"
   embeds_many :receipts,  :class_name => "MailboxerMongoid::Receipt"
 
@@ -14,11 +17,15 @@ class MailboxerMongoid::Conversation
 
   before_validation :clean
 
-  scope :participant, lambda {|participant|
-    receipts = MailboxerMongoid::Receipt.recipient(participant)
-    conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
-    self.in(id: conversation_ids).desc(:updated_at)
-  }
+  def participants=(p)
+    self[:participants] = p.collect {|participant| {:participant_id => participant._id, :_type => participant.class.to_s}}
+  end
+
+  #scope :participant, lambda {|participant|
+  #  receipts = MailboxerMongoid::Receipt.recipient(participant)
+  #  conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
+  #  self.in(id: conversation_ids).desc(:updated_at)
+  #}
   scope :inbox, lambda {|participant|
     receipts = MailboxerMongoid::Receipt.recipient(participant).inbox.not_trash.not_deleted
     conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
@@ -87,9 +94,9 @@ class MailboxerMongoid::Conversation
   end
 
   #Returns an array of participants
-  def participants
-    recipients
-  end
+  #def participants
+  #  recipients
+  #end
 
   #Originator of the conversation.
   def originator

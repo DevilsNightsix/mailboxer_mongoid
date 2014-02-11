@@ -55,7 +55,7 @@ Gem::Specification.new do |s|
 
   # Database
   s.add_dependency("mongoid", ">= 3.0.0")
-  s.add_dependency("bson_ext")
+  #s.add_dependency("bson_ext")
 
 
 end
