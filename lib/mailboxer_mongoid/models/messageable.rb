@@ -12,8 +12,10 @@ module MailboxerMongoid
       end
 
       included do
-        has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
-        has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
+        embeds_one :mailbox, class_name: "MailboxerMongoid::Mailbox", autobuild: true, inverse_of: :owner
+
+        #has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
+        #has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
       end
 
       unless defined?(MailboxerMongoid.name_method)
@@ -41,7 +43,7 @@ module MailboxerMongoid
 
       #Gets the mailbox of the messageable
       def mailbox
-        @mailbox = MailboxerMongoid::Mailbox.new(self) if @mailbox.nil?
+        @mailbox = mailbox#MailboxerMongoid::Mailbox.new(self) if @mailbox.nil?
         @mailbox.type = :all
         @mailbox
       end
@@ -54,9 +56,15 @@ module MailboxerMongoid
       #Sends a messages, starting a new conversation, with the messageable
       #as originator
       def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now)
-        convo = MailboxerMongoid::Conversation.new({:subject => subject})
+
+        #convo = MailboxerMongoid::Conversation.new({:subject => subject})
+        puts '------------------'
+        convo = mailbox.conversations#.new({:subject => subject})
+        puts convo.class
+
         convo.created_at = message_timestamp
         convo.updated_at = message_timestamp
+
         message = messages.new({:body => msg_body, :subject => subject, :attachment => attachment})
         message.created_at = message_timestamp
         message.updated_at = message_timestamp

@@ -1,6 +1,9 @@
 class MailboxerMongoid::Mailbox
   include Mongoid::Document
 
+  embedded_in :owner, :polymorphic => true
+  embeds_many :conversations, :class_name => "MailboxerMongoid::Conversation"
+
   attr_accessor :type
   attr_reader :messageable
 
@@ -33,6 +36,7 @@ class MailboxerMongoid::Mailbox
   #* :read=false
   #* :unread=true
   #
+=begin
   def conversations(options = {})
     conv = MailboxerMongoid::Conversation.participant(@messageable)
 
@@ -55,7 +59,7 @@ class MailboxerMongoid::Mailbox
 
     conv
   end
-
+=end
   #Returns the conversations in the inbox of messageable
   #
   #Same as conversations({:mailbox_type => 'inbox'})

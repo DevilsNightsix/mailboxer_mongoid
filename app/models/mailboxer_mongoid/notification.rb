@@ -16,6 +16,7 @@ class MailboxerMongoid::Notification
   attr_accessible :body, :subject, :global, :expires if MailboxerMongoid.protected_attributes?
 
   belongs_to :sender, :polymorphic => true
+  has_and_belongs_to_many :participants, :polymorphic => true
   belongs_to :notified_object, :polymorphic => true
   has_many :receipts, :dependent => :destroy, :class_name => "MailboxerMongoid::Receipt"
 

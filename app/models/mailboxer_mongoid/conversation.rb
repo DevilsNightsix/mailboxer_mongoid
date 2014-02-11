@@ -4,10 +4,11 @@ class MailboxerMongoid::Conversation
 
   field :subject, type: String, default: ""
 
-  attr_accessible :subject if MailboxerMongoid.protected_attributes?
+  #attr_accessible :subject if MailboxerMongoid.protected_attributes?
 
-  has_many :messages, :dependent => :destroy, :class_name => "MailboxerMongoid::Message"
-  #has_many :receipts, :through => :messages, :class_name => "MailboxerMongoid::Receipt"
+  embedded_in :mailbox, :class_name => "MailboxerMongoid::Mailbox"
+  #embeds_many :messages, :class_name => "MailboxerMongoid::Message"
+  #embeds_many :receipts,  :class_name => "MailboxerMongoid::Receipt"
 
   validates_presence_of :subject
 
