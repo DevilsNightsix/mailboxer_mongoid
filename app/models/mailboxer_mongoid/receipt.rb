@@ -11,9 +11,15 @@ class MailboxerMongoid::Receipt
 
 
 
-  belongs_to :notification, :class_name => "MailboxerMongoid::Notification", :validate => true, :autosave => true
-  belongs_to :receiver, :polymorphic => true
-  belongs_to :message, :class_name => "MailboxerMongoid::Message", :foreign_key => "notification_id"
+  # belongs_to :notification, :class_name => "MailboxerMongoid::Notification", :validate => true, :autosave => true
+  #belongs_to :receiver, :polymorphic => true
+  #belongs_to :message, :class_name => "MailboxerMongoid::Message", :foreign_key => "notification_id"
+
+  def notification
+
+  end
+
+
 
   validates_presence_of :receiver
 

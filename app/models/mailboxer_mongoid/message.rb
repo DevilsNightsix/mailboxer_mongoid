@@ -4,15 +4,15 @@ class MailboxerMongoid::Message < MailboxerMongoid::Notification
   # @TODO
   #attr_accessible :attachment if Mailboxer.protected_attributes?
 
-  #embedded_in :conversation, :class_name => "MailboxerMongoid::Conversation", :validate => true, :autosave => true
+  embedded_in :conversation, :class_name => "MailboxerMongoid::Conversation", :validate => true#, :autosave => true
   validates_presence_of :sender
 
   class_attribute :on_deliver_callback
   protected :on_deliver_callback
 
-  scope :conversation, lambda { |conversation|
-    where(:conversation_id => conversation.id)
-  }
+  #scope :conversation, lambda { |conversation|
+  #  where(:conversation_id => conversation.id)
+  #}
 
   # @TODO -> gridfs?
   #mount_uploader :attachment, AttachmentUploader

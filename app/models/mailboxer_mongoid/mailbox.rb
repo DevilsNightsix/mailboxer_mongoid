@@ -1,16 +1,17 @@
 class MailboxerMongoid::Mailbox
   include Mongoid::Document
 
-  embedded_in :owner, :polymorphic => true
-  embeds_many :conversations, :class_name => "MailboxerMongoid::Conversation"
+  embedded_in :owner, polymorphic: true
+  embeds_many :conversations, :class_name => "MailboxerMongoid::Conversation", inverse_of: :mailbox
 
-  attr_accessor :type
-  attr_reader :messageable
+
+  #attr_accessor :type
+  #attr_reader :messageable
 
   #Initializer method
-  def initialize(messageable)
-    @messageable = messageable
-  end
+  #def initialize(messageable)
+  #  @messageable = messageable
+  #end
 
   #Returns the notifications for the messageable
   def notifications(options = {})
