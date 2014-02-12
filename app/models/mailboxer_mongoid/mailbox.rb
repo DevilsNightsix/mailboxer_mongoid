@@ -39,7 +39,7 @@ class MailboxerMongoid::Mailbox
   #* :read=false
   #* :unread=true
   #
-=begin
+
   def conversations(options = {})
     conv = MailboxerMongoid::Conversation.participant(@messageable)
 
@@ -62,7 +62,7 @@ class MailboxerMongoid::Mailbox
 
     conv
   end
-=end
+
   #Returns the conversations in the inbox of messageable
   #
   #Same as conversations({:mailbox_type => 'inbox'})

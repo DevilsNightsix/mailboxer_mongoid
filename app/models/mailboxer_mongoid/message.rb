@@ -38,7 +38,6 @@ class MailboxerMongoid::Message < MailboxerMongoid::Notification
     temp_receipts << sender_receipt
 
     if temp_receipts.all?(&:valid?)
-
       temp_receipts.each(&:save!) 	#Save receipts
 
       MailboxerMongoid::MailDispatcher.new(self, recipients).call
@@ -49,6 +48,9 @@ class MailboxerMongoid::Message < MailboxerMongoid::Notification
 
       on_deliver_callback.call(self) if on_deliver_callback
     end
+
+
+
     sender_receipt
   end
 end

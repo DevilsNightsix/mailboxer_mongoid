@@ -10,8 +10,8 @@ class MailboxerMongoid::Conversation
 
   #embedded_in :mailbox, class_name: "MailboxerMongoid::Mailbox", inverse_of: :conversations
   #belongs_to :participant, :polymorphic => true
-  embeds_many :messages, :class_name => "MailboxerMongoid::Message"
-  embeds_many :receipts,  :class_name => "MailboxerMongoid::Receipt"
+  embeds_many :messages, :class_name => "MailboxerMongoid::Message", cascade_callbacks: true
+  #embeds_many :receipts,  :class_name => "MailboxerMongoid::Receipt", cascade_callbacks: true
 
   validates_presence_of :subject
 
@@ -21,11 +21,13 @@ class MailboxerMongoid::Conversation
     self[:participants] = p.collect {|participant| {:participant_id => participant._id, :_type => participant.class.to_s}}
   end
 
-  #scope :participant, lambda {|participant|
-  #  receipts = MailboxerMongoid::Receipt.recipient(participant)
-  #  conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
-  #  self.in(id: conversation_ids).desc(:updated_at)
-  #}
+  scope :participant, lambda {|participant|
+    #receipts = MailboxerMongoid::Receipt.recipient(participant)
+    #conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
+    #self.in(id: conversation_ids).desc(:updated_at)
+    where('participants._type' => participant.class.to_s, 'participants.participant_id' => participant.id)
+  }
+
   scope :inbox, lambda {|participant|
     receipts = MailboxerMongoid::Receipt.recipient(participant).inbox.not_trash.not_deleted
     conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
@@ -87,10 +89,21 @@ class MailboxerMongoid::Conversation
     end
   end
 
+  def participants
+    self[:participants]
+  end
+
   #Returns an array of participants
   def recipients
-    return [] unless original_message
-    Array original_message.recipients
+    puts '--------------------------------------------'
+    puts 'REQUESTING RECIPIENTS '
+    puts participants
+    puts participants.class
+    participants.collect do |participant|
+      puts participant
+    end
+    #return [] unless original_message
+    #Array original_message.recipients
   end
 
   #Returns an array of participants
@@ -105,7 +118,7 @@ class MailboxerMongoid::Conversation
 
   #First message of the conversation.
   def original_message
-    @original_message ||= self.messages.asc(:created_at).first
+    @original_message ||= self.messages.first #self.messages.asc(:created_at).first
   end
 
   #Sender of the last message.
@@ -115,7 +128,8 @@ class MailboxerMongoid::Conversation
 
   #Last message in the conversation.
   def last_message
-    @last_message ||= self.messages.desc(:created_at).first
+
+    @last_message ||= self.messages.last #.desc(:created_at).first
   end
 
   #Returns the receipts of the conversation for one participants

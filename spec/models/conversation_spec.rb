@@ -11,7 +11,6 @@ describe MailboxerMongoid::Conversation do
     @receipt4 = @entity2.reply_to_all(@receipt3,"Reply body 3")
     @message1 = @receipt1.notification
     @message4 = @receipt4.notification
-    @message1.reload
     @conversation = @message1.conversation
 
   end

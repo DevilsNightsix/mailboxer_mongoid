@@ -49,32 +49,26 @@ module MailboxerMongoid
         MailboxerMongoid::Notification.notify_all([self],subject,body,obj,sanitize_text,notification_code,send_mail)
       end
 
-      def get_mailbox
-        if mailbox.nil?
-          create_mailbox()
-        end
-
-        mailbox
+      #Gets the mailbox of the messageable
+      def mailbox
+        @mailbox = MailboxerMongoid::Mailbox.new(self) if @mailbox.nil?
+        @mailbox.type = :all
+        @mailbox
       end
 
       #Sends a messages, starting a new conversation, with the messageable
       #as originator
       def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now)
 
-        #convo = MailboxerMongoid::Conversation.new({:subject => subject})
-        mailbox = get_mailbox
-        convo = mailbox.conversations.new({:subject => subject})
-        convo.created_at = message_timestamp
-        convo.updated_at = message_timestamp
-
-        message = convo.messages.new({:body => msg_body, :subject => subject, :attachment => attachment})
-        message.created_at = message_timestamp
-        message.updated_at = message_timestamp
-        #message.conversation = convo
-
+        convo = MailboxerMongoid::Conversation.create({:subject => subject})
+        participants = recipients.is_a?(Array) ? recipients : [recipients]
+        convo.participants = participants.uniq
+        message = convo.messages.create({:body => msg_body, :subject => subject, :attachment => attachment})
+        message.sender = self
         message.recipients = recipients.is_a?(Array) ? recipients : [recipients]
         message.recipients = message.recipients.uniq
         receipt = message.deliver false, sanitize_text
+
         receipt
       end
 
@@ -82,10 +76,8 @@ module MailboxerMongoid
       #Use reply_to_sender, reply_to_all and reply_to_conversation instead.
       def reply(conversation, recipients, reply_body, subject=nil, sanitize_text=true, attachment=nil)
         subject = subject || "RE: #{conversation.subject}"
-        response = messages.new({:body => reply_body, :subject => subject, :attachment => attachment})
-        response.created_at = Time.now
-        response.updated_at = Time.now
-        response.conversation = conversation
+        response = conversation.messages.create({:body => reply_body, :subject => subject, :attachment => attachment})
+        response.sender = self
         response.recipients = recipients.is_a?(Array) ? recipients : [recipients]
         response.recipients = response.recipients.uniq
         response.recipients.delete(self)
@@ -99,12 +91,6 @@ module MailboxerMongoid
 
       #Replies to all the recipients of the message in the conversation
       def reply_to_all(receipt, reply_body, subject=nil, sanitize_text=true, attachment=nil)
-
-        puts '---------------------------'
-        puts "receipt: #{receipt}"
-        puts "receipt.message: #{receipt.message}"
-        puts "receipt.message.recipients: #{receipt.message.recipients}"
-
         reply(receipt.conversation, receipt.message.recipients, reply_body, subject, sanitize_text, attachment)
       end
 

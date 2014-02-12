@@ -6,26 +6,20 @@ class MailboxerMongoid::Receipt
   field :trashed, type: Boolean, default: false
   field :deleted, type: Boolean, default: false
   field :mailbox_type, type: String
-  field :message_id, type: BSON::ObjectId
-  field :notification_id
+
+
   attr_accessible :trashed, :is_read, :deleted if MailboxerMongoid.protected_attributes?
 
-  embedded_in :conversation, class_name: "MailboxerMongoid::Conversation", inverse_of: :receipts
+  #embedded_in :conversation, class_name: "MailboxerMongoid::Conversation", inverse_of: :receipts
   #embedded_in :notification, :class_name => "MailboxerMongoid::Notification"#, :validate => true
    #belongs_to :notification, :class_name => "MailboxerMongoid::Notification", :validate => true, :autosave => true
   belongs_to :receiver, :polymorphic => true
+  embedded_in :notification, :class_name => "MailboxerMongoid::Notification"#, :foreign_key => "notification_id"
   #belongs_to :message, :class_name => "MailboxerMongoid::Message", :foreign_key => "notification_id"
 
 
-  def message=(message)
-    message_id = message.id
-  end
-
   def message
-    puts '-+=== '
-    puts self
-    puts self.notification
-
+    notification
   end
 
 
@@ -42,14 +36,15 @@ class MailboxerMongoid::Receipt
   scope :messages_receipts, lambda {
     raise 'cannot use messages receipts yet'
     joins(:notification).where('mailboxer_notifications.type' => MailboxerMongoid::Message.to_s) }
-  scope :notification, lambda { |notification|
-    where(:notification_id => notification.id)
-  }
-  scope :conversation, lambda { |conversation|
-    messages = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
-    messages_ids = messages.collect {|message| message.id.to_s}
-    self.in(notification_id: messages_ids)
-  }
+  #scope :notification, lambda { |notification|
+  #  where(:notification_id => notification.id)
+  #}
+  #scope :conversation, lambda { |conversation|
+    #messages = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
+    #messages_ids = messages.collect {|message| message.id.to_s}
+    #self.in(notification_id: messages_ids)
+
+  #}
   scope :sentbox, lambda { where(:mailbox_type => "sentbox").asc(:updated_at) }
   scope :inbox, lambda { where(:mailbox_type => "inbox") }
   scope :trash, lambda { where(:trashed => true, :deleted => false) }
