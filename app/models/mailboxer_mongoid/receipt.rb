@@ -39,12 +39,14 @@ class MailboxerMongoid::Receipt
   #scope :notification, lambda { |notification|
   #  where(:notification_id => notification.id)
   #}
-  #scope :conversation, lambda { |conversation|
+  scope :conversation, lambda { |conversation|
     #messages = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
     #messages_ids = messages.collect {|message| message.id.to_s}
     #self.in(notification_id: messages_ids)
 
-  #}
+    where(:conversation_id => conversation.id)
+  }
+
   scope :sentbox, lambda { where(:mailbox_type => "sentbox").asc(:updated_at) }
   scope :inbox, lambda { where(:mailbox_type => "inbox") }
   scope :trash, lambda { where(:trashed => true, :deleted => false) }
@@ -57,57 +59,69 @@ class MailboxerMongoid::Receipt
   after_validation :remove_duplicate_errors
   class << self
     #Marks all the receipts from the relation as read
-    def mark_as_read(options={})
-      update_receipts({:is_read => true}, options)
+    def mark_as_read(receipts, options={})
+      update_receipts(receipts, {:is_read => true}, options)
+      #receipts.each {|receipt| receipt.is_read = true}
     end
 
     #Marks all the receipts from the relation as unread
-    def mark_as_unread(options={})
-      update_receipts({:is_read => false}, options)
+    def mark_as_unread(receipts, options={})
+      update_receipts(receipts, {:is_read => false}, options)
+      #receipts.each {|receipt| receipt.is_read = false}
     end
 
     #Marks all the receipts from the relation as trashed
-    def move_to_trash(options={})
-      update_receipts({:trashed => true}, options)
+    def move_to_trash(receipts, options={})
+      puts 'TRASHING RECEIPPTS'
+      puts receipts.length
+      update_receipts(receipts, {:trashed => true}, options)
+      #receipts.each {|receipt| receipt.trashed = true}
     end
 
     #Marks all the receipts from the relation as not trashed
-    def untrash(options={})
-      update_receipts({:trashed => false}, options)
+    def untrash(receipts, options={})
+      update_receipts(receipts, {:trashed => false}, options)
+      #receipts.each {|receipt| receipt.trashed = false}
     end
 
     #Marks the receipt as deleted
-    def mark_as_deleted(options={})
-      update_receipts({:deleted => true}, options)
+    def mark_as_deleted(receipts, options={})
+      update_receipts(receipts, {:deleted => true}, options)
+      #receipts.each {|receipt| receipt.deleted = true}
     end
 
     #Marks the receipt as not deleted
-    def mark_as_not_deleted(options={})
-      update_receipts({:deleted => false}, options)
+    def mark_as_not_deleted(receipts, options={})
+      update_receipts(receipts, {:deleted => false}, options)
+      #receipts.each {|receipt| receipt.deleted = false}
+    end
+
+    def has_unread?(receipts, options={})
+      receipts.reduce(false) {|has_unread, receipt| has_unread || !receipt.is_read }
     end
 
     #Moves all the receipts from the relation to inbox
-    def move_to_inbox(options={})
-      update_receipts({:mailbox_type => :inbox, :trashed => false}, options)
+    def move_to_inbox(receipts, options={})
+      update_receipts(receipts, {:mailbox_type => :inbox, :trashed => false}, options)
     end
 
     #Moves all the receipts from the relation to sentbox
-    def move_to_sentbox(options={})
-      update_receipts({:mailbox_type => :sentbox, :trashed => false}, options)
+    def move_to_sentbox(receipts, options={})
+      update_receipts(receipts, {:mailbox_type => :sentbox, :trashed => false}, options)
     end
 
     #This methods helps to do a update_all with table joins, not currently supported by rails.
     #Acording to the github ticket https://github.com/rails/rails/issues/522 it should be
     #supported with 3.2.
-    def update_receipts(updates,options={})
-      ids = Array.new
+    def update_receipts(receipts, updates, options={})
 
-      where(options).each do |rcp|
-        ids << rcp.id
-      end
+      ids = receipts.collect {|receipt| receipt.id}
+      conversation = receipts.first.message.conversation
 
       unless ids.empty?
-        self.in(id: ids).update_all(updates)
+        MailboxerMongoid::Conversation.where(:_id => conversation.id, :'messages.receipts._id'.in => ids).update_all(updates)
+
+        #self.in(id: ids).update_all(updates)
       end
     end
   end

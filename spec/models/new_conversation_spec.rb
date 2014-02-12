@@ -106,8 +106,14 @@ describe MailboxerMongoid::Conversation do
       it "finds trash conversations with receipts for participant" do
         trashed_conversation = @entity1.send_message(participant, "Body", "Subject").notification.conversation
         trashed_conversation.move_to_trash(participant)
-
-        MailboxerMongoid::Conversation.trash(participant).should == [trashed_conversation]
+        MailboxerMongoid::Conversation.trash(participant).entries.each do |entry|
+          entry.messages.each do |message|
+            message.receipts.each do |receipt|
+              puts receipt.to_json
+            end
+          end
+        end
+        MailboxerMongoid::Conversation.trash(participant).entries.should == [trashed_conversation]
       end
     end
 
@@ -116,7 +122,7 @@ describe MailboxerMongoid::Conversation do
         [sentbox_conversation, inbox_conversation].each {|c| c.mark_as_read(participant) }
         unread_conversation = @entity1.send_message(participant, "Body", "Subject").notification.conversation
 
-        MailboxerMongoid::Conversation.unread(participant).should == [unread_conversation]
+        MailboxerMongoid::Conversation.unread(participant).entries.should == [unread_conversation]
       end
     end
   end

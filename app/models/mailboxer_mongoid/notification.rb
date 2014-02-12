@@ -20,7 +20,7 @@ class MailboxerMongoid::Notification
 
   #has_and_belongs_to_many :participants, :polymorphic => true
   #belongs_to :notified_object, :polymorphic => true
-  embeds_many :receipts, :class_name => "MailboxerMongoid::Receipt", cascade_callbacks: true
+  embeds_many :receipts, :class_name => "MailboxerMongoid::Receipt"#, cascade_callbacks: true
 
   validates_presence_of :subject, :body
 
@@ -125,7 +125,9 @@ class MailboxerMongoid::Notification
 
   #Returns the receipt for the participant
   def receipt_for(participant)
-    MailboxerMongoid::Receipt.notification(self).recipient(participant)
+    #MailboxerMongoid::Receipt.notification(self).recipient(participant)
+    #receipts.find_by()
+    receipts.find_by(:receiver_id => participant.id)
   end
 
   #Returns the receipt for the participant. Alias for receipt_for(participant)
@@ -206,12 +208,11 @@ class MailboxerMongoid::Notification
   def build_receipt(receiver, mailbox_type, is_read = false)
 
     receipt = receipts.new.tap do |receipt|
-      #receipt.notification = self
+      receipt.notification = self
       receipt.is_read = is_read
       receipt.receiver = receiver
       receipt.mailbox_type = mailbox_type
     end
-    receipts << receipt
 
     receipt
   end

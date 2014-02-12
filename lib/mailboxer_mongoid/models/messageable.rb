@@ -19,6 +19,10 @@ module MailboxerMongoid
         #has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
         #has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
 
+        def participator_reference
+          {:participant_id => self._id, :_type => self.class.to_s}
+        end
+
       end
 
       unless defined?(MailboxerMongoid.name_method)
@@ -59,14 +63,18 @@ module MailboxerMongoid
       #Sends a messages, starting a new conversation, with the messageable
       #as originator
       def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now)
+        recipients = recipients.is_a?(Array) ? recipients : [recipients]
 
-        convo = MailboxerMongoid::Conversation.create({:subject => subject})
-        participants = recipients.is_a?(Array) ? recipients : [recipients]
-        convo.participants = participants.uniq
-        message = convo.messages.create({:body => msg_body, :subject => subject, :attachment => attachment})
+        convo = MailboxerMongoid::Conversation.new({:subject => subject})
+        convo.participant_refs << self.participator_reference
+        recipients.each {|recipient| convo.participant_refs << recipient.participator_reference }
+        convo.save
+
+        message = convo.messages.new({:body => msg_body, :subject => subject, :attachment => attachment})
         message.sender = self
-        message.recipients = recipients.is_a?(Array) ? recipients : [recipients]
-        message.recipients = message.recipients.uniq
+        message.recipients = recipients.uniq
+        message.save
+        #message.recipients = message.recipients.uniq
         receipt = message.deliver false, sanitize_text
 
         receipt
@@ -76,11 +84,16 @@ module MailboxerMongoid
       #Use reply_to_sender, reply_to_all and reply_to_conversation instead.
       def reply(conversation, recipients, reply_body, subject=nil, sanitize_text=true, attachment=nil)
         subject = subject || "RE: #{conversation.subject}"
-        response = conversation.messages.create({:body => reply_body, :subject => subject, :attachment => attachment})
+        response = conversation.messages.new({:body => reply_body, :subject => subject, :attachment => attachment})
         response.sender = self
-        response.recipients = recipients.is_a?(Array) ? recipients : [recipients]
-        response.recipients = response.recipients.uniq
-        response.recipients.delete(self)
+        recipients = recipients.is_a?(Array) ? recipients : [recipients]
+        recipients = recipients.uniq
+        recipients.delete(self)
+        response.recipients = recipients
+        #response.recipients = response.recipients.uniq
+        #response.recipients.delete(self)
+        response.save
+
         response.deliver true, sanitize_text
       end
 
