@@ -1,11 +1,5 @@
 class MailboxerMongoid::Mailbox
-  include Mongoid::Document
-
-  #field :type, type: Symbol
-
-  #belongs_to :owner, polymorphic: true
-  #embeds_many :conversations, :class_name => "MailboxerMongoid::Conversation"#, inverse_of: :mailbox
-
+  #include Mongoid::Document
 
   attr_accessor :type
   attr_accessor :messageable
@@ -89,7 +83,8 @@ class MailboxerMongoid::Mailbox
 
   #Returns all the receipts of messageable, from Messages and Notifications
   def receipts(options = {})
-    MailboxerMongoid::Receipt.where(options).recipient(@messageable)
+    #MailboxerMongoid::Receipt.where(options).recipient(@messageable)
+    MailboxerMongoid::Conversation.participant(@messageable).receipts_for(@messageable)
   end
 
   #Deletes all the messages in the trash of messageable. NOT IMPLEMENTED.
@@ -122,6 +117,7 @@ class MailboxerMongoid::Mailbox
   #
   #If object isn't one of the above, a nil will be returned
   def receipts_for(object)
+    puts '----------'
     case object
     when MailboxerMongoid::Message, MailboxerMongoid::Notification
       object.receipt_for(@messageable)

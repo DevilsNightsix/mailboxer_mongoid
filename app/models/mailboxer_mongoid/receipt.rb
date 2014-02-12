@@ -26,7 +26,9 @@ class MailboxerMongoid::Receipt
   validates_presence_of :receiver
 
   scope :recipient, lambda { |recipient|
-    where(:receiver_id => recipient.id.to_s, :receiver_type => recipient.class.to_s)
+
+    #MailboxerMongoid::Conversation.where(:'messages.receipts'.elem_match => {:receiver_id => recipient.id.to_s, :receiver_type => recipient.class.to_s})
+    self.where(:receiver_id => recipient.id.to_s, :receiver_type => recipient.class.to_s)
   }
   #Notifications Scope checks type to be nil, not Notification because of STI behaviour
   #with the primary class (no type is saved)
@@ -43,8 +45,7 @@ class MailboxerMongoid::Receipt
     #messages = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
     #messages_ids = messages.collect {|message| message.id.to_s}
     #self.in(notification_id: messages_ids)
-
-    where(:conversation_id => conversation.id)
+    MailboxerMongoid::Conversation.where(:_id => conversation.id)
   }
 
   scope :sentbox, lambda { where(:mailbox_type => "sentbox").asc(:updated_at) }
@@ -72,8 +73,6 @@ class MailboxerMongoid::Receipt
 
     #Marks all the receipts from the relation as trashed
     def move_to_trash(receipts, options={})
-      puts 'TRASHING RECEIPPTS'
-      puts receipts.length
       update_receipts(receipts, {:trashed => true}, options)
       #receipts.each {|receipt| receipt.trashed = true}
     end
@@ -120,7 +119,6 @@ class MailboxerMongoid::Receipt
 
       unless ids.empty?
         MailboxerMongoid::Conversation.where(:_id => conversation.id, :'messages.receipts._id'.in => ids).update_all(updates)
-
         #self.in(id: ids).update_all(updates)
       end
     end

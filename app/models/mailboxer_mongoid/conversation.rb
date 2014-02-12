@@ -44,7 +44,7 @@ class MailboxerMongoid::Conversation
   scope :trash, lambda {|participant|
     where('participant_refs._type' => participant.class.to_s,
           'participant_refs.participant_id' => participant.id,
-          :'messages.receipts'.elem_match => {'receiver_id' => participant.id, 'trashed' => false}
+          :'messages.receipts'.elem_match => {'receiver_id' => participant.id, 'trashed' => true}
     ).desc(:updated_at)
   }
   scope :unread,  lambda {|participant|
@@ -60,32 +60,46 @@ class MailboxerMongoid::Conversation
     ).desc(:updated_at)
   }
 
+  class << self
+    def exists?(id)
+      find(id).nil? == false
+    end
+
+    def receipts_for(participant, options={})
+      receipts = Array.new
+
+      where(options).each do |convo|
+        receipts << convo.receipts_for(participant)
+      end
+
+      receipts.flatten
+    end
+  end
+
+
+
   #Mark the conversation as read for one of the participants
   def mark_as_read(participant)
     return unless participant
     MailboxerMongoid::Receipt.mark_as_read(receipts_for(participant))
-    save
   end
 
   #Mark the conversation as unread for one of the participants
   def mark_as_unread(participant)
     return unless participant
     MailboxerMongoid::Receipt.mark_as_unread(receipts_for(participant))
-    save
   end
 
   #Move the conversation to the trash for one of the participants
   def move_to_trash(participant)
     return unless participant
     MailboxerMongoid::Receipt.move_to_trash(receipts_for(participant))
-    save
   end
 
   #Takes the conversation out of the trash for one of the participants
   def untrash(participant)
     return unless participant
     MailboxerMongoid::Receipt.untrash(receipts_for(participant))
-    save
   end
 
   #Mark the conversation as deleted for one of the participants
