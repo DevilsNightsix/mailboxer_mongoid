@@ -32,17 +32,18 @@ describe MailboxerMongoid::Mailbox do
   it "should return all mail" do
     assert @entity1.mailbox.receipts
     @entity1.mailbox.receipts.count.should==4
-    @entity1.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[0]
-    @entity1.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[1]
-    @entity1.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[2]
-    @entity1.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[3]
+
+    @entity1.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[0]
+    @entity1.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[1]
+    @entity1.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[2]
+    @entity1.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[3]
 
     assert @entity2.mailbox.receipts
     @entity2.mailbox.receipts.count.should==4
-    @entity2.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[0]
-    @entity2.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[1]
-    @entity2.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[2]
-    @entity2.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[3]
+    @entity2.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
+    @entity2.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
+    @entity2.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
+    @entity2.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
   end
 
   it "should return sentbox" do

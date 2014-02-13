@@ -25,11 +25,15 @@ class MailboxerMongoid::Receipt
 
   validates_presence_of :receiver
 
-  scope :recipient, lambda { |recipient|
-
-    #MailboxerMongoid::Conversation.where(:'messages.receipts'.elem_match => {:receiver_id => recipient.id.to_s, :receiver_type => recipient.class.to_s})
-    self.where(:receiver_id => recipient.id.to_s, :receiver_type => recipient.class.to_s)
+  #def self.recipient(recipient)
+  scope :recipient, lambda {|recipient|
+    MailboxerMongoid::Conversation.participant(recipient)#.receipts_for(recipient)
   }
+
+  def self.conversation(conversation)
+    MailboxerMongoid::Conversation.where(:_id => conversation._id)#.order_by(:'comments.updated_at'.asc)
+  end
+
   #Notifications Scope checks type to be nil, not Notification because of STI behaviour
   #with the primary class (no type is saved)
   scope :notifications_receipts, lambda {
@@ -41,12 +45,6 @@ class MailboxerMongoid::Receipt
   #scope :notification, lambda { |notification|
   #  where(:notification_id => notification.id)
   #}
-  scope :conversation, lambda { |conversation|
-    #messages = MailboxerMongoid::Message.where(:conversation_id => conversation.id.to_s)
-    #messages_ids = messages.collect {|message| message.id.to_s}
-    #self.in(notification_id: messages_ids)
-    MailboxerMongoid::Conversation.where(:_id => conversation.id)
-  }
 
   scope :sentbox, lambda { where(:mailbox_type => "sentbox").asc(:updated_at) }
   scope :inbox, lambda { where(:mailbox_type => "inbox") }

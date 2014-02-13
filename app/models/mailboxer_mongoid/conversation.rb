@@ -13,6 +13,9 @@ class MailboxerMongoid::Conversation
   embeds_many :messages, :class_name => "MailboxerMongoid::Message"#, cascade_callbacks: true
   #embeds_many :receipts,  :class_name => "MailboxerMongoid::Receipt", cascade_callbacks: true
 
+  index "messages.created_at" => -1
+  index "messages.receipts.created_at" => -1
+
   validates_presence_of :subject
 
   before_validation :clean
