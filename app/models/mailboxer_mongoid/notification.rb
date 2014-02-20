@@ -6,44 +6,137 @@ class MailboxerMongoid::Notification
   field :body, type: String
   field :subject, type: String, default: ""
 
+  field :nuid, type: BSON::ObjectId, default: BSON::ObjectId.new() #notification uid
+
   field :draft, type: Boolean, default: false
   field :notification_code, type: String, default: nil
   field :attachment, type: String
   field :global, type: Boolean, default: false
   field :expires, type: DateTime
 
+  field :is_read, type: Boolean, default: false
+  field :trashed, type: Boolean, default: false
+  field :deleted, type: Boolean, default: false
+  field :mailbox_type, type: String, default: nil
+
   attr_accessor :recipients
   #attr_accessible :body, :subject, :global, :expires if MailboxerMongoid.protected_attributes?
 
-  belongs_to :sender, :polymorphic => true
+  #belongs_to :messageable, :polymorphic => true
+  belongs_to :conversation, :class_name => "MailboxerMongoid::Conversation", :validate => true, :autosave => true
+  belongs_to :notified_object, :polymorphic => true
   belongs_to :recipient, :polymorphic => true
+  belongs_to :sender, :polymorphic => true
 
-  #has_and_belongs_to_many :participants, :polymorphic => true
-  #belongs_to :notified_object, :polymorphic => true
-  embeds_many :receipts, :class_name => "MailboxerMongoid::Receipt"#, cascade_callbacks: true
+  def receiver
+    recipient
+  end
+
+  def receiver=(receiver)
+    self.recipient = receiver
+  end
+
+  class << self
+    #Marks all the receipts from the relation as read
+    def mark_as_read(options={})
+      update_receipts({:is_read => true}, options)
+    end
+
+    #Marks all the receipts from the relation as unread
+    def mark_as_unread(options={})
+      update_receipts({:is_read => false}, options)
+    end
+
+    #Marks all the receipts from the relation as trashed
+    def move_to_trash(options={})
+      update_receipts({:trashed => true}, options)
+    end
+
+    #Marks all the receipts from the relation as not trashed
+    def untrash(options={})
+      update_receipts({:trashed => false}, options)
+    end
+
+    #Marks the receipt as deleted
+    def mark_as_deleted(options={})
+      update_receipts({:deleted => true}, options)
+    end
+
+    #Marks the receipt as not deleted
+    def mark_as_not_deleted(options={})
+      update_receipts({:deleted => false}, options)
+    end
+
+    #Moves all the receipts from the relation to inbox
+    def move_to_inbox(options={})
+      update_receipts({:mailbox_type => :inbox, :trashed => false}, options)
+    end
+
+    #Moves all the receipts from the relation to sentbox
+    def move_to_sentbox(options={})
+      update_receipts({:mailbox_type => :sentbox, :trashed => false}, options)
+    end
+
+    #This methods helps to do a update_all with table joins, not currently supported by rails.
+    #Acording to the github ticket https://github.com/rails/rails/issues/522 it should be
+    #supported with 3.2.
+    def update_receipts(updates, options={})
+      update_all(updates)
+    end
+  end
+
+
+  #embeds_many :receipts, :class_name => "MailboxerMongoid::Receipt"#, cascade_callbacks: true
+  #has_many :receipts, :class_name => "MailboxerMongoid::Receipt"#, cascade_callbacks: true
 
   validates_presence_of :subject, :body
 
   # return all notifications that were sent to recipient
-  scope :recipient, lambda {|recipient|
-    notification_ids = recipient.receipts.collect {|receipt| receipt.notification.id }
-    self.in(id: notification_ids)
+  scope :recipient, lambda { |recipient|
+    self.or({:recipient_id => recipient.id, :mailbox_type.in => ['inbox', nil]},
+            {:sender_id => recipient.id, :mailbox_type => 'sentbox'}
+    ).desc(:created_at)
   }
+
+  scope :participant, lambda { |participant|
+    self.or({:recipient_id => participant.id, :mailbox_type.in => ['inbox', nil]},
+            {:sender_id => participant.id, :mailbox_type => 'sentbox'}
+    ).desc(:created_at)
+  }
+
   scope :with_object, lambda { |obj|
-    where('notified_object_id' => obj.id,'notified_object_type' => obj.class.to_s)
+    where(:notified_object_id => obj.id, :notified_object_type => obj.class.to_s)
   }
   scope :not_trashed, lambda {
     raise "not useable yet"
     joins(:receipts).where('mailboxer_receipts.trashed' => false)
   }
   scope :unread,  lambda {
-    notification_ids = MailboxerMongoid::Receipt.where(is_read: false).collect {|receipt| receipt.notification.id}
-    self.in(id: notification_ids)
+    #notification_ids = MailboxerMongoid::Receipt.where(is_read: false).collect {|receipt| receipt.notification.id}
+    #self.in(id: notification_ids)
+    where(:is_read => false)
+  }
+
+  scope :conversation, lambda {|conversation|
+    where(:conversation_id => conversation.id).desc(:created_at)
+  }
+
+  scope :message_group, lambda {|notification|
+    where(:nuid => notification.nuid)
   }
 
   scope :global, lambda { where(:global => true) }
   scope :expired, lambda { where(:expires.lt => Time.now) }
   scope :unexpired, lambda { self.or({:expires => nil}, {:expires.gt => Time.now}) }
+
+  scope :sentbox, lambda { not_deleted.not_trash.where(:mailbox_type => "sentbox") }
+  scope :inbox, lambda { not_deleted.not_trash.where(:mailbox_type => "inbox") }
+  scope :trash, lambda { where(:trashed => true, :deleted => false) }
+  scope :not_trash, lambda { where(:trashed => false) }
+  scope :deleted, lambda { where(:deleted => true) }
+  scope :not_deleted, lambda { where(:deleted => false) }
+  scope :is_read, lambda { where(:is_read => true) }
+  scope :is_unread, lambda { where(:is_read => false) }
 
   class << self
     #Sends a Notification to all the recipients
@@ -92,32 +185,34 @@ class MailboxerMongoid::Notification
   #Use Mailboxer::Models::Message.notify and Notification.notify_all instead.
   def deliver(should_clean = true, send_mail = true)
     clean if should_clean
-    temp_receipts = Array.new
+    #temp_receipts = Array.new
 
     #Receiver receipts
-    self.recipients.each do |r|
-      temp_receipts << build_receipt(r, nil, false)
+    temp_notifications = self.recipients.map do |r|
+      notification = self.dup
+      #notification.created_at = DateTime.now
+      #notification.updated_at = DateTime.now
+      notification.recipient = r
+      notification
     end
 
-    if temp_receipts.all?(&:valid?)
-      temp_receipts.each(&:save!)   #Save receipts
-      MailboxerMongoid::MailDispatcher.new(self, recipients).call if send_mail
+    if temp_notifications.all?(&:valid?)
+      temp_notifications.each(&:save!)   #Save receipts
+      #MailboxerMongoid::MailDispatcher.new(self, recipients).call if send_mail
       self.recipients = nil
     end
 
-    return temp_receipts if temp_receipts.size > 1
-    temp_receipts.first
+    #return temp_notifications if temp_notifications.size > 1
+    #temp_notifications.first
+    receipts = temp_notifications.collect {|notif| build_receipt(notif, nil, false)}
+    return receipts if receipts.size > 1
+    receipts.first
   end
 
   #Returns the recipients of the Notification
   def recipients
     if @recipients.blank?
-      recipients_array = Array.new
-      self.receipts.each do |receipt|
-        recipients_array << receipt.receiver
-      end
-
-      recipients_array
+      self.conversation.participants
     else
       @recipients
     end
@@ -125,9 +220,10 @@ class MailboxerMongoid::Notification
 
   #Returns the receipt for the participant
   def receipt_for(participant)
+    self
     #MailboxerMongoid::Receipt.notification(self).recipient(participant)
     #receipts.find_by()
-    receipts.find_by(:receiver_id => participant.id)
+    #receipts.find_by(:receiver_id => participant.id)
   end
 
   #Returns the receipt for the participant. Alias for receipt_for(participant)
@@ -138,7 +234,7 @@ class MailboxerMongoid::Notification
   #Returns if the participant have read the Notification
   def is_unread?(participant)
     return false if participant.nil?
-    !self.receipt_for(participant).first.is_read
+    !self.is_read#self.receipt_for(participant).first.is_read
   end
 
   def is_read?(participant)
@@ -154,19 +250,21 @@ class MailboxerMongoid::Notification
   #Returns if the participant have deleted the Notification
   def is_deleted?(participant)
     return false if participant.nil?
-    return self.receipt_for(participant).first.deleted
+    return self.deleted #self.receipt_for(participant).first.deleted
   end
 
   #Mark the notification as read
   def mark_as_read(participant)
     return if participant.nil?
-    self.receipt_for(participant).mark_as_read
+    return self.update_attribute(:is_read, true)
+    #self.receipt_for(participant).mark_as_read
   end
 
   #Mark the notification as unread
   def mark_as_unread(participant)
     return if participant.nil?
-    self.receipt_for(participant).mark_as_unread
+    #self.receipt_for(participant).mark_as_unread
+    return self.update_attribute(:is_read, false)
   end
 
   #Move the notification to the trash
@@ -184,7 +282,8 @@ class MailboxerMongoid::Notification
   #Mark the notification as deleted for one of the participant
   def mark_as_deleted(participant)
     return if participant.nil?
-    return self.receipt_for(participant).mark_as_deleted
+    #return self.receipt_for(participant).mark_as_deleted
+    return self.update_attribute(:deleted, true)
   end
 
   #Sanitizes the body and subject
@@ -206,15 +305,7 @@ class MailboxerMongoid::Notification
   protected
 
   def build_receipt(receiver, mailbox_type, is_read = false)
-
-    receipt = receipts.new.tap do |receipt|
-      receipt.notification = self
-      receipt.is_read = is_read
-      receipt.receiver = receiver
-      receipt.mailbox_type = mailbox_type
-    end
-
-    receipt
+    self.becomes(MailboxerMongoid::Receipt)
   end
 
 end

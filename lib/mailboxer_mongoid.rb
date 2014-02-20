@@ -3,6 +3,10 @@ module MailboxerMongoid
     autoload :Messageable, 'mailboxer_mongoid/models/messageable'
   end
 
+  module MongoidExt
+    autoload :Factory, 'mailboxer_mongoid/mongoid_ext/factory'
+  end
+
   mattr_accessor :default_from
   @@default_from = "no-reply@mailboxer_mongoid.com"
   mattr_accessor :uses_emails

@@ -12,7 +12,6 @@ describe MailboxerMongoid::Conversation do
     @message1 = @receipt1.notification
     @message4 = @receipt4.notification
     @conversation = @message1.conversation
-
   end
 
   it "should have proper original message" do
@@ -47,7 +46,7 @@ describe MailboxerMongoid::Conversation do
   it "should be removed from the database once deleted by all participants" do
     @conversation.mark_as_deleted(@entity1)
     @conversation.mark_as_deleted(@entity2)
-    MailboxerMongoid::Conversation.where(id: @conversation.id).exists?.should be_false
+    MailboxerMongoid::Conversation.exists?(@conversation.id).should be_false
   end
 
   it "should be able to be marked as read" do
@@ -67,6 +66,8 @@ describe MailboxerMongoid::Conversation do
     @conversation.add_participant(new_user)
     @conversation.participants.count.should == 3
     @conversation.participants.should include(new_user, @entity1, @entity2)
+
+    # no longer true
     @conversation.receipts_for(new_user).count.should == @conversation.receipts_for(@entity1).count
   end
 
@@ -107,7 +108,7 @@ describe MailboxerMongoid::Conversation do
         trashed_conversation = @entity1.send_message(participant, "Body", "Subject").notification.conversation
         trashed_conversation.move_to_trash(participant)
 
-        MailboxerMongoid::Conversation.trash(participant).should == [trashed_conversation]
+        MailboxerMongoid::Conversation.trash(participant).entries.should == [trashed_conversation]
       end
     end
 
@@ -116,7 +117,7 @@ describe MailboxerMongoid::Conversation do
         [sentbox_conversation, inbox_conversation].each {|c| c.mark_as_read(participant) }
         unread_conversation = @entity1.send_message(participant, "Body", "Subject").notification.conversation
 
-        MailboxerMongoid::Conversation.unread(participant).should == [unread_conversation]
+        MailboxerMongoid::Conversation.unread(participant).entries.should == [unread_conversation]
       end
     end
   end

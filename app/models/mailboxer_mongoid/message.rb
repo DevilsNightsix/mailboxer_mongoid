@@ -4,15 +4,14 @@ class MailboxerMongoid::Message < MailboxerMongoid::Notification
   # @TODO
   #attr_accessible :attachment if Mailboxer.protected_attributes?
 
-  embedded_in :conversation, :class_name => "MailboxerMongoid::Conversation", :validate => true
   validates_presence_of :sender
+
+  belongs_to :conversation, :class_name => "MailboxerMongoid::Conversation", :validate => true, :autosave => true
 
   class_attribute :on_deliver_callback
   protected :on_deliver_callback
 
-  #scope :conversation, lambda { |conversation|
-  #  where(:conversation_id => conversation.id)
-  #}
+  index :created_at => 1
 
   # @TODO -> gridfs?
   #mount_uploader :attachment, AttachmentUploader
@@ -29,18 +28,23 @@ class MailboxerMongoid::Message < MailboxerMongoid::Notification
   def deliver(reply = false, should_clean = true)
     self.clean if should_clean
 
-    #Receiver receipts
-    temp_receipts = recipients.map { |r| build_receipt(r, 'inbox') }
+    temp_messages = recipients.collect do |r|
+      message = self.dup
+      message.recipient = r
+      message.mailbox_type = 'inbox'
+      message
+    end
+
 
     #Sender receipt
     sender_receipt = build_receipt(sender, 'sentbox', true)
 
-    temp_receipts << sender_receipt
+    #temp_receipts << sender_receipt
 
-    if temp_receipts.all?(&:valid?)
-      temp_receipts.each(&:save!) 	#Save receipts
+    if temp_messages.all?(&:valid?)
+      temp_messages.each(&:save!) 	#Save receipts
 
-      MailboxerMongoid::MailDispatcher.new(self, recipients).call
+      #MailboxerMongoid::MailDispatcher.new(self, recipients).call
 
       conversation.touch if reply
 
@@ -49,8 +53,8 @@ class MailboxerMongoid::Message < MailboxerMongoid::Notification
       on_deliver_callback.call(self) if on_deliver_callback
     end
 
-
-
     sender_receipt
   end
+
+
 end

@@ -5,5 +5,4 @@ class MailboxerMongoid::InstallGenerator < Rails::Generators::Base #:nodoc:
   def create_initializer_file
     template 'initializer.rb', 'config/initializers/mailboxer_mongoid.rb'
   end
-
 end

@@ -2,115 +2,118 @@ class MailboxerMongoid::Conversation
   include Mongoid::Document
   include Mongoid::Timestamps
 
+  NOTBOX = 1 # default and participant cannot view any messages
+  TRASHBOX = 2
+  SENTBOX = 4
+  INBOX = 8
+  INBOX_AND_SENTBOX = INBOX | SENTBOX
+
+  CONVERSATION_UNREAD = 1
+  CONVERSATION_READ = 2
+
   field :subject, type: String, default: ""
 
-  field :participant_refs, type: Array, default: []
 
+  attr_accessor :participants
   #attr_accessible :subject if MailboxerMongoid.protected_attributes?
 
   #embedded_in :mailbox, class_name: "MailboxerMongoid::Mailbox", inverse_of: :conversations
   #belongs_to :participant, :polymorphic => true
-  embeds_many :messages, :class_name => "MailboxerMongoid::Message"#, cascade_callbacks: true
-  #embeds_many :receipts,  :class_name => "MailboxerMongoid::Receipt", cascade_callbacks: true
 
-  index "messages.created_at" => -1
-  index "messages.receipts.created_at" => -1
+  has_many :messages, :dependent => :destroy, :class_name => "MailboxerMongoid::Message"
+  embeds_many :participant_metadata, :class_name => "MailboxerMongoid::ParticipantMetadata", inverse_of: :conversation
+
+  #has_many :receipts,  :class_name => "MailboxerMongoid::Receipt"#, cascade_callbacks: true
+  scope :default_scope, ->{includes(:messages)}
+
+  #index "messages.created_at" => -1
+  #index "messages.receipts.created_at" => -1
 
   validates_presence_of :subject
 
   before_validation :clean
 
-  def participant_refs=(p)
-    self[:participant_refs] = p.collect {|participant| participant.participator_reference }
-  end
-
-
   scope :participant, lambda {|participant|
-    #receipts = MailboxerMongoid::Receipt.recipient(participant)
-    #conversation_ids = receipts.collect {|receipt| receipt.message.conversation_id }
-    #self.in(id: conversation_ids).desc(:updated_at)
-    where(:'participant_refs'.elem_match => {:_type => participant.class.to_s, :participant_id => participant.id}).desc(:updated_at)
+    where(:'participant_metadata'.elem_match => {:participant_id => participant.id}).desc(:created_at)
   }
 
   scope :inbox, lambda {|participant|
-    where('participant_refs._type' => participant.class.to_s,
-          'participant_refs.participant_id' => participant.id,
-          :'messages.receipts'.elem_match => {'receiver_id' => participant.id, 'mailbox_type' => 'inbox'}
-    ).desc(:updated_at)
+    where(:'participant_metadata'.elem_match =>
+              {:participant_id => participant.id,
+               :mailbox_type.in => [INBOX, INBOX_AND_SENTBOX]
+              })
   }
   scope :sentbox, lambda {|participant|
-    where('participant_refs._type' => participant.class.to_s,
-          'participant_refs.participant_id' => participant.id,
-          :'messages.receipts'.elem_match => {'receiver_id' => participant.id, 'mailbox_type' => 'sentbox'}
-    ).desc(:updated_at)
+    where(:'participant_metadata'.elem_match =>
+              {:participant_id => participant.id,
+               :mailbox_type.in => [SENTBOX, INBOX_AND_SENTBOX]
+              })
   }
   scope :trash, lambda {|participant|
-    where('participant_refs._type' => participant.class.to_s,
-          'participant_refs.participant_id' => participant.id,
-          :'messages.receipts'.elem_match => {'receiver_id' => participant.id, 'trashed' => true}
-    ).desc(:updated_at)
+    where(:'participant_metadata'.elem_match =>
+              {:participant_id => participant.id,
+               :mailbox_type => TRASHBOX
+              })
   }
   scope :unread,  lambda {|participant|
-    where('participant_refs._type' => participant.class.to_s,
-          'participant_refs.participant_id' => participant.id,
-          :'messages.receipts'.elem_match => {'receiver_id' => participant.id, 'is_read' => false}
-    ).desc(:updated_at)
+    where(:'participant_metadata'.elem_match =>
+              {:participant_id => participant.id,
+               :conversation_read => false
+              })
   }
   scope :not_trash,  lambda {|participant|
-    where('participant_refs._type' => participant.class.to_s,
-          'participant_refs.participant_id' => participant.id,
-          :'messages.receipts'.elem_match => {'receiver_id' => participant.id, 'trashed' => false}
-    ).desc(:updated_at)
+    where('participant_metadata._type' => participant.class.to_s,
+          'participant_metadata.participant_id' => participant.id)
   }
 
   class << self
+
     def exists?(id)
-      find(id).nil? == false
+      MailboxerMongoid::Conversation.find(id).nil? == false
     end
 
-    def receipts_for(participant, options={})
-      receipts = Array.new
-
-      where(options).each do |convo|
-        receipts << convo.receipts_for(participant)
-      end
-
-      receipts.flatten
-    end
+    #def receipts_for(participant, options={})
+    #  receipts = Array.new
+    #  where(options).order_by(:created_at.desc, :'messages.created_at'.desc, :'messages.receipts.created_at'.desc).each do |convo|
+    #    receipts << convo.receipts_for(participant)
+    #  end
+    #  #receipts = receipts.flatten
+    #  where(options).messages.receipts.where(:receiver_id => participant.id)
+    #end
   end
-
-
 
   #Mark the conversation as read for one of the participants
   def mark_as_read(participant)
     return unless participant
-    MailboxerMongoid::Receipt.mark_as_read(receipts_for(participant))
+    participant_metadata.where(:participant_id => participant.id).update_all(:conversation_read => true)
+    receipts_for(participant).mark_as_read
   end
 
   #Mark the conversation as unread for one of the participants
   def mark_as_unread(participant)
     return unless participant
-    MailboxerMongoid::Receipt.mark_as_unread(receipts_for(participant))
+    participant_metadata.where(:participant_id => participant.id).update_all(:conversation_read => false)
+    receipts_for(participant).mark_as_unread
   end
 
   #Move the conversation to the trash for one of the participants
   def move_to_trash(participant)
     return unless participant
-    MailboxerMongoid::Receipt.move_to_trash(receipts_for(participant))
+    participant_metadata.where(:participant_id => participant.id).update_all(:mailbox_type => TRASHBOX)
+    receipts_for(participant).move_to_trash
   end
 
   #Takes the conversation out of the trash for one of the participants
   def untrash(participant)
     return unless participant
-    MailboxerMongoid::Receipt.untrash(receipts_for(participant))
+    receipts_for(participant).untrash
   end
 
   #Mark the conversation as deleted for one of the participants
   def mark_as_deleted(participant)
     return unless participant
-    deleted_receipts = MailboxerMongoid::Receipt.mark_as_deleted(receipts_for(participant))
+    deleted_receipts = receipts_for(participant).mark_as_deleted
     remove_participant(participant)
-
     if is_orphaned?
       destroy
     else
@@ -119,25 +122,23 @@ class MailboxerMongoid::Conversation
   end
 
   def participants
-    @participants ||= self[:participant_refs].collect do |participant|
-      klass = Object.const_get(participant[:_type])
-      klass.find(participant[:participant_id])
+    @participants ||= self.participant_metadata.collect do |metadata|
+      klass = Object.const_get(metadata.participant_type)
+      klass.find(metadata.participant_id)
     end
 
     @participants
   end
 
   def remove_participant(participant)
-    self.participant_refs.reject! {|p| p[:participant_id] == participant.id}
+    self.participant_metadata.delete(self.participant_metadata.where(:participant_id => participant.id).first)
     if defined?(@participants)
-      #if the partipators have already been queried for, reject here too
-      @participants.reject!{|p| p.id == participant.id}
+      @participants = @participants.reject{|p| p.id == participant.id}
     end
-
   end
 
   #Returns an array of participants
-  def recipients()
+  def recipients
     return [] unless original_message
     Array original_message.recipients.uniq
   end
@@ -154,7 +155,7 @@ class MailboxerMongoid::Conversation
 
   #First message of the conversation.
   def original_message
-    @original_message ||= self.messages.first #self.messages.asc(:created_at).first
+    @original_message ||= self.messages.sentbox.asc(:created_at).limit(1).first
   end
 
   #Sender of the last message.
@@ -164,14 +165,12 @@ class MailboxerMongoid::Conversation
 
   #Last message in the conversation.
   def last_message
-
-    @last_message ||= self.messages.last #.desc(:created_at).first
+    @last_message ||= self.messages.sentbox.desc(:created_at).limit(1).first
   end
 
   #Returns the receipts of the conversation for one participants
   def receipts_for(participant)
-    #MailboxerMongoid::Receipt.conversation(self).recipient(participant)
-    messages.collect {|message| message.receipt_for(participant)}
+    MailboxerMongoid::Receipt.conversation(self).participant(participant)
   end
 
   #Returns the number of messages of the conversation
@@ -186,22 +185,38 @@ class MailboxerMongoid::Conversation
   end
 
 	#Adds a new participant to the conversation
-	def add_participant(participant)
+	def add_participant(participant, mailbox_type = INBOX)
     # Why unshift? b/c mailboxer spec included test that checked order and pushing
     # a participant here caused the test to fail. Not sure if this is important yet
-    self.participant_refs.unshift(participant.participator_reference)
+    #self.participant_refs.unshift(participant.participator_reference)
+
+    metadata = self.participant_metadata.new({
+      :mailbox_type => mailbox_type
+    })
+    metadata.participant = participant
+
+    # If the convo is already saved, save here.
+    # If the convo is not saved, something else will save it later
+    #if self.persisted?
+
+    metadata.save
+    #end
+
     if defined?(@participants)
       @participants << participant
     end
-    messages = self.messages
-		messages.each do |message|
-		  receipt = MailboxerMongoid::Receipt.new
-		  #receipt.notification = message
+
+    #messages = MailboxerMongoid::Message.where(:conversation_id => self.id, :mailbox_type => 'sentbox')
+    messages = self.messages.where(:mailbox_type => 'sentbox')
+    messages.each do |message|
+		  receipt = message.dup #MailboxerMongoid::Receipt.new
 		  receipt.is_read = false
-		  receipt.receiver = participant
+      receipt.trashed = false #needed?
+		  receipt.recipient = participant
 		  receipt.mailbox_type = 'inbox'
-      message.receipts << receipt
-		end
+      receipt.save
+    end
+
 	end
 
   #Returns true if the participant has at least one trashed message of the conversation
@@ -214,7 +229,7 @@ class MailboxerMongoid::Conversation
   def is_deleted?(participant)
     return false unless participant
     #return self.receipts_for(participant).deleted.count == self.receipts_for(participant).count
-    return participants.find {|p| p.id == participant.id }.nil?
+    participants.find {|p| p.id == participant.id }.nil?
   end
 
   #Returns true if both participants have deleted the conversation
@@ -238,8 +253,7 @@ class MailboxerMongoid::Conversation
   #Returns true if the participant has at least one unread message of the conversation
   def is_unread?(participant)
     return false unless participant
-    #receipts_for(participant).not_trash.is_unread.count != 0
-    MailboxerMongoid::Receipt.has_unread?(receipts_for(participant))
+    receipts_for(participant).not_trash.is_unread.count != 0
   end
 
   protected

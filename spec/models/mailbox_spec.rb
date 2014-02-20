@@ -11,7 +11,6 @@ describe MailboxerMongoid::Mailbox do
     @receipt4 = @entity2.reply_to_all(@receipt3,"Reply body 3")
     @message1 = @receipt1.notification
     @message4 = @receipt4.notification
-
     @conversation = @message1.conversation
   end
 
@@ -23,27 +22,26 @@ describe MailboxerMongoid::Mailbox do
     assert @entity1.mailbox.conversations
 
     @entity1.mailbox.conversations.to_a.count.should==4
-        @entity1.mailbox.conversations.to_a.count(@conversation).should==1
-        @entity1.mailbox.conversations.to_a.count(@conv2).should==1
-        @entity1.mailbox.conversations.to_a.count(@conv3).should==1
-        @entity1.mailbox.conversations.to_a.count(@conv4).should==1
+    @entity1.mailbox.conversations.to_a.count(@conversation).should==1
+    @entity1.mailbox.conversations.to_a.count(@conv2).should==1
+    @entity1.mailbox.conversations.to_a.count(@conv3).should==1
+    @entity1.mailbox.conversations.to_a.count(@conv4).should==1
   end
 
   it "should return all mail" do
     assert @entity1.mailbox.receipts
     @entity1.mailbox.receipts.count.should==4
-
-    @entity1.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[0]
-    @entity1.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[1]
-    @entity1.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[2]
-    @entity1.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation).receipts_for(@entity1)[3]
+    @entity1.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[0]
+    @entity1.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[1]
+    @entity1.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[2]
+    @entity1.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity1).conversation(@conversation)[3]
 
     assert @entity2.mailbox.receipts
     @entity2.mailbox.receipts.count.should==4
-    @entity2.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
-    @entity2.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
-    @entity2.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
-    @entity2.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation).receipts_for(@entity2)[0]
+    @entity2.mailbox.receipts[0].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[0]
+    @entity2.mailbox.receipts[1].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[1]
+    @entity2.mailbox.receipts[2].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[2]
+    @entity2.mailbox.receipts[3].should==MailboxerMongoid::Receipt.recipient(@entity2).conversation(@conversation)[3]
   end
 
   it "should return sentbox" do
@@ -107,8 +105,7 @@ describe MailboxerMongoid::Mailbox do
 
   it "should deleted messages are not shown in inbox" do
     assert @entity1.mailbox.receipts.inbox
-
-    @entity1.mailbox.inbox.count.should==1 #was 2
+    @entity1.mailbox.inbox.count.should==2
     @entity1.mailbox.receipts.inbox[0].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[0]
     @entity1.mailbox.receipts.inbox[1].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[1]
 
@@ -128,7 +125,7 @@ describe MailboxerMongoid::Mailbox do
 
   it "should reply for deleted messages return to inbox" do
     assert @entity1.mailbox.receipts.inbox
-    @entity1.mailbox.inbox.count.should==1 #was 2
+    @entity1.mailbox.inbox.count.should==2
     @entity1.mailbox.receipts.inbox[0].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[0]
     @entity1.mailbox.receipts.inbox[1].should==MailboxerMongoid::Receipt.recipient(@entity1).inbox.conversation(@conversation)[1]
 
@@ -139,7 +136,7 @@ describe MailboxerMongoid::Mailbox do
     @entity1.mailbox.inbox.count.should==1
 
     @entity2.reply_to_all(@receipt3,"Reply body 3")
-    @entity1.mailbox.inbox.count.should==1 #was 2
+    @entity1.mailbox.inbox.count.should==2
   end
 
   context "STI models" do
@@ -151,12 +148,12 @@ describe MailboxerMongoid::Mailbox do
 
     it "should add one to senders sentbox" do
       @sti_entity1.mailbox.sentbox.count.should==1
-      @sti_entity1.mailbox.sentbox.should include(@sti_mail.conversation)
+      @sti_entity1.mailbox.sentbox.should include(@sti_mail)
     end
 
     it "should add one to recievers inbox" do
       @sti_entity2.mailbox.inbox.count.should == 1
-      @sti_entity2.mailbox.inbox.should include(@sti_mail.conversation)
+      @sti_entity2.mailbox.inbox.should include(@sti_mail)
     end
   end
 

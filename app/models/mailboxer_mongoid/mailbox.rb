@@ -51,7 +51,7 @@ class MailboxerMongoid::Mailbox
     end
 
     if (options.has_key?(:read) && options[:read]==false) || (options.has_key?(:unread) && options[:unread]==true)
-      conv = conv.unread(@messageable)
+      conv = conv.unread
     end
 
     conv
@@ -62,6 +62,8 @@ class MailboxerMongoid::Mailbox
   #Same as conversations({:mailbox_type => 'inbox'})
   def inbox(options={})
     options = options.merge(:mailbox_type => 'inbox')
+    #MailboxerMongoid::Notification.where(options).participant(@messageable)
+    #MailboxerMongoid::Notification.participant(@messageable).inbox
     self.conversations(options)
   end
 
@@ -70,6 +72,7 @@ class MailboxerMongoid::Mailbox
   #Same as conversations({:mailbox_type => 'sentbox'})
   def sentbox(options={})
     options = options.merge(:mailbox_type => 'sentbox')
+    #MailboxerMongoid::Notification.where(options).participant(@messageable)
     self.conversations(options)
   end
 
@@ -78,13 +81,14 @@ class MailboxerMongoid::Mailbox
   #Same as conversations({:mailbox_type => 'trash'})
   def trash(options={})
     options = options.merge(:mailbox_type => 'trash')
-    self.conversations(options)
+    MailboxerMongoid::Notification.where(options).participant(@messageable)
   end
 
   #Returns all the receipts of messageable, from Messages and Notifications
   def receipts(options = {})
     #MailboxerMongoid::Receipt.where(options).recipient(@messageable)
-    MailboxerMongoid::Conversation.participant(@messageable).receipts_for(@messageable)
+    #MailboxerMongoid::Conversation.participant(@messageable).receipts_for(@messageable)\
+    MailboxerMongoid::Receipt.where(options).participant(@messageable)
   end
 
   #Deletes all the messages in the trash of messageable. NOT IMPLEMENTED.
@@ -117,7 +121,6 @@ class MailboxerMongoid::Mailbox
   #
   #If object isn't one of the above, a nil will be returned
   def receipts_for(object)
-    puts '----------'
     case object
     when MailboxerMongoid::Message, MailboxerMongoid::Notification
       object.receipt_for(@messageable)

@@ -9,19 +9,26 @@ module MailboxerMongoid
         def acts_as_messageable
           include Messageable
         end
+
+        def acts_as_proxy(*args)
+          @acts_as_proxy_for = args
+        end
+
+        def is_proxy_for(klass)
+          @acts_as_proxy_for.include?(klass) if defined?(@acts_as_proxy_for)
+        end
+
       end
 
       included do
         #has_one :mailbox, class_name: "MailboxerMongoid::Mailbox", as: :owner, autosave: true
 
-        #has_many :conversations, class_name: "MailboxerMongoid::Conversation", as: :participant, autosave: true
+        has_many :conversations, class_name: "MailboxerMongoid::Conversation", as: :participant, autosave: true
+        #has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :messageable
+        has_many :received, :class_name => "MailboxerMongoid::Message", :as => :receivable, :foreign_key => :notification_id
+        has_many :sent, :class_name => "MailboxerMongoid::Message", :as => :sendable, :foreign_key => :notification_id
 
-        #has_many :messages, :class_name => "MailboxerMongoid::Message", :as => :sender
         #has_many :receipts, :class_name => "MailboxerMongoid::Receipt", dependent: :destroy, as: :receiver
-
-        def participator_reference
-          {:participant_id => self._id, :_type => self.class.to_s}
-        end
 
       end
 
@@ -66,33 +73,42 @@ module MailboxerMongoid
         recipients = recipients.is_a?(Array) ? recipients : [recipients]
 
         convo = MailboxerMongoid::Conversation.new({:subject => subject})
-        convo.participant_refs << self.participator_reference
-        recipients.each {|recipient| convo.participant_refs << recipient.participator_reference }
+        convo.add_participant(self, MailboxerMongoid::Conversation::SENTBOX)
+        recipients.each do |recipient|
+          convo.add_participant(recipient, MailboxerMongoid::Conversation::INBOX)
+        end
         convo.save
 
         message = convo.messages.new({:body => msg_body, :subject => subject, :attachment => attachment})
         message.sender = self
+        message.created_at = message_timestamp
+        message.updated_at = message_timestamp
+        message.mailbox_type = 'sentbox'
         message.recipients = recipients.uniq
         message.save
-        #message.recipients = message.recipients.uniq
-        receipt = message.deliver false, sanitize_text
 
-        receipt
+        message.deliver false, sanitize_text
       end
 
       #Basic reply method. USE NOT RECOMENDED.
       #Use reply_to_sender, reply_to_all and reply_to_conversation instead.
       def reply(conversation, recipients, reply_body, subject=nil, sanitize_text=true, attachment=nil)
-        subject = subject || "RE: #{conversation.subject}"
-        response = conversation.messages.new({:body => reply_body, :subject => subject, :attachment => attachment})
-        response.sender = self
         recipients = recipients.is_a?(Array) ? recipients : [recipients]
         recipients = recipients.uniq
         recipients.delete(self)
+
+        subject = subject || "RE: #{conversation.subject}"
+        response = conversation.messages.new({:body => reply_body, :subject => subject, :attachment => attachment})
+        response.sender = self
+        response.mailbox_type = 'sentbox'
         response.recipients = recipients
-        #response.recipients = response.recipients.uniq
-        #response.recipients.delete(self)
         response.save
+
+        recipient_ids = recipients.collect {|r| r.id }
+        MailboxerMongoid::Conversation.where(:_id => conversation.id, :'participant_metadata.participant_id'.in =>
+                                                    recipient_ids).bit(:'participant_metadata.$.mailbox_type' => {or: MailboxerMongoid::Conversation::INBOX})
+
+        conversation.participant_metadata.where(:participant_id => self.id).first.bit(:mailbox_type => {or: MailboxerMongoid::Conversation::SENTBOX})
 
         response.deliver true, sanitize_text
       end
